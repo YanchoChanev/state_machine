@@ -1,18 +1,23 @@
-#ifndef MASTER_COMM_H
-#define MASTER_COMM_H
+#ifndef SLAVE_COMM_H
+#define SLAVE_COMM_H
 
-
+#include "types.h"
 #include "FreeRTOS.h"
 #include "queue.h"
 
-// Queue size and item size configuration
-#define QUEUE_LENGTH 10
-#define QUEUE_ITEM_SIZE sizeof(int)
-#define TICK_TO_WAIT_SEND_MS 100
-#define DELAY_SEND_MS 500
+void initMasterComm(QueueHandle_t stateQueueHandle_);
 
-void initCommunicationMaster(QueueHandle_t myQueueHandle);
-void sendMsgMaster(const void* data);
-void reciveMsgMaster(void *data);
+/**
+ * @brief Sends a message to the slave queue.
+ * @param data Pointer to the data to send.
+ */
+RetVal sendMsgMaster(const void *data);
 
-#endif // MASTER_COMM_H
+/**
+ * @brief Receives a message from the slave queue.
+ * @param data Pointer to store the received data.
+ * @return RET_OK if successful, RET_ERROR otherwise.
+ */
+RetVal reciveMsgMaster(void *data);
+
+#endif // SLAVE_COMM_H

@@ -1,17 +1,33 @@
 #ifndef SLAVE_COMM_H
 #define SLAVE_COMM_H
 
+#include "types.h"
 #include "FreeRTOS.h"
 #include "queue.h"
 
-// Queue size and item size configuration
-#define QUEUE_LENGTH 10
-#define QUEUE_ITEM_SIZE sizeof(int)
-#define TICK_TO_WAIT_SEND_MS 100
-#define DELAY_SEND_MS 500
+typedef enum {
+    STATE_CHANNEL,
+    REST_CHANNEL
+}ChannelId;
 
-void initComunicationSlave(QueueHandle_t myQueueHandle);
-void sendMsgSlave(const void* data);
-void reciveMsgSlave(void *data);
+/**
+ * @brief Initializes the restart queue.
+ * @return RET_OK on success, RET_ERROR on failure.
+ */
+RetVal initSlaveComm(QueueHandle_t stateQueueHandler);
+
+
+/**
+ * @brief Sends a message to the slave queue.
+ * @param data Pointer to the data to send.
+ */
+RetVal sendMsgSlave(ChannelId channeId, const void *data);
+
+/**
+ * @brief Receives a message from the slave queue.
+ * @param data Pointer to store the received data.
+ * @return RET_OK if successful, RET_ERROR otherwise.
+ */
+RetVal reciveMsgSlave(ChannelId channeId, void *data);
 
 #endif // SLAVE_COMM_H

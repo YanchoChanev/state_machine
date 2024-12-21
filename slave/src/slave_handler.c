@@ -1,69 +1,110 @@
-#include "slave_handler.h"
-#include "slave_comm.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "FreeRTOS.h"
-#include "task.h"
-#include "types.h"
+#include "logger.h"
+#include "slave_comm.h"
+#include "slave_handler.h"
+#include "slave_state_machine.h"
+#include "master_state_machine.h"
+#include "queue.h"
 
-void vSlaveTaskCommHandling(void* args){
-    printf("vSlaveTaskCommHandling created\n");
-    initComunicationSlave(args);
-    // MasterMessageRes data;
+// Handles restart signals.
+void vRestartHandler(void *args) {
+    uint8_t signal;
     
-    // while(1){
-    //     reciveMsgSlave(&data);
-    //     printf("Message ID = %d, message state = %d\n", data.msg_id, data.state);
-    // }
 
-    vTaskDelay(pdMS_TO_TICKS(10));
+    while (1) {
+        if (reciveMsgSlave(REST_CHANNEL, &signal) == RET_OK) {
+            logMessage(LOG_LEVEL_DEBUG, "SlaveHandler", "Received restart signal");
+            if (signal == 1) {
+                handelStatus(SLEEP);
+                vTaskDelay(pdMS_TO_TICKS(10000));
+                if (restartAllTasks() != RET_OK) {
+                    logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to restart all tasks");
+                }
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
 }
 
-void vSlaveTaskTestHandling(void* args){
-    char input[16]; // Buffer for input
-    int number;
+// Observes and retrieves the slave's status.
+void vSlaveStatusObservationHandler(void *args) {
+    logMessage(LOG_LEVEL_INFO, "SlaveHandler", "vSlaveStatusObservationHandler created");
+    QueueMessage data;
 
-    printf("vSlaveTaskTestHandling created\n");
-    printf("Enter a number between 1 and 5: ");
-    while(1){
-        
-        fflush(stdout); // Ensure the prompt is displayed immediately
-
-        // Read input from the console
-        if (fgets(input, sizeof(input), stdin) != NULL) {
-            // Convert input to an integer
-            number = atoi(input);
-
-            // Validate the number
-            if (number >= 0 && number <= 5) {
-                printf("You entered a valid number: %d\n", number);
-                statusChange(number);
-                // Process the number (replace this with your logic)
-            } else {
-                printf("Invalid input. Please enter a number between 1 and 5.\n");
-            }
+    while (1) {
+        if (reciveMsgSlave(STATE_CHANNEL, &data) != RET_OK) {
+            logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to receive message");
         } else {
-            // printf("Error reading input.\n");
+            logMessageFormatted(LOG_LEVEL_DEBUG, "SlaveHandler", "Message ID = %d, message state = %d", data.msg_id, data.state);
+            data.msg_id = SLAVE_CURRENT_STATUS;
+            data.state = getState();
+            // printf("State: %d\n", data.state);
+            if (sendMsgSlave(STATE_CHANNEL, &data) != RET_OK) {
+                logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to send message");
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+// Handles communication tasks.
+void vSlaveCommHandler(void *args) {
+    logMessage(LOG_LEVEL_INFO, "SlaveHandler", "vSlaveCommHandler created");
+    QueueMessage data;
+
+    while (1) {
+        if (reciveMsgSlave(STATE_CHANNEL, &data) == RET_OK) {
+            logMessageFormatted(LOG_LEVEL_DEBUG, "SlaveHandler", "Message ID = %d, message state = %d", data.msg_id, data.state);
+            if (data.msg_id == RESET_SLAVE) {
+                handelStatus(SLEEP);
+                uint8_t signal = 1;
+                if (sendMsgSlave(REST_CHANNEL, &signal) != pdPASS) { // Send restart signal
+                    logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to send restart signal");
+                }
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+// Handles test tasks with user input.
+void vSlaveTaskTestHandling(void *args) {
+    char input[16];
+    int number;
+    logMessage(LOG_LEVEL_DEBUG, "SlaveHandler", "vSlaveTaskTestHandling created");
+
+    while (1) {
+        printf("Enter a number between 0 and 2: ");
+        fflush(stdout);
+
+        while (1) {
+            if (fgets(input, sizeof(input), stdin) != NULL) {
+                // Remove newline character if present
+                input[strcspn(input, "\n")] = 0;
+
+                // Convert input to an integer
+                number = atoi(input);
+
+                // Validate the number
+                if (number >= 0 && number <= 2) {
+                    logMessageFormatted(LOG_LEVEL_INFO, "SlaveHandler", "Valid input received: %d", number);
+                    handelStatus(number);
+                    break; // Exit the inner loop on valid input
+                } else {
+                    logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Invalid input. Please enter a number between 0 and 2.");
+                }
+            } else {
+                // logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Error reading input.");
+            }
+
+            // Clear the input buffer
+            while (getchar() != '\n' && getchar() != EOF);
+            vTaskDelay(pdMS_TO_TICKS(100));
         }
 
-        // // Simulate task delay to prevent tight looping
-        // vTaskDelay(pdMS_TO_TICKS(500));
-    }
-
-    vTaskDelay(pdMS_TO_TICKS(100));
-}
-
-void vSlaveCommHandler(void *args){
-    printf("Slave is created\n");
-    QueueHandle_t myQueueHandle = (QueueHandle_t)args;
-    initComunicationSlave(myQueueHandle);
-
-    QueueMessage data;
-    
-    while(1){
-        reciveMsgSlave(&data);
-        printf("Message ID = %d, message state = %d\n", data.msg_id, data.state);
-        vTaskDelay(pdMS_TO_TICKS(10));
+        // Simulate task delay to prevent tight looping
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }

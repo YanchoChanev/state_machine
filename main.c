@@ -13,62 +13,139 @@
 /* Include the task headers */
 #include "master_handler.h"
 #include "slave_handler.h"
+#include "slave_restart_threads.h"
+#include "types.h"
+#include "logger.h"
 
 /* Define the maximum number of messages and the maximum message size */
 #define MAX_MESSAGES 10
-#define MAX_MSG_SIZE sizeof(QueueMessage)  // Size of a single message
+#define MAX_MSG_SIZE sizeof(QueueMessage)  
 
-/* Define the QueueMessage structure */
-typedef struct {
-    uint8_t id;
-    uint16_t value;
-} QueueMessage;
+// Queue handle 
+static QueueHandle_t xQueue; 
 
-/* Queue handle */
-QueueHandle_t xQueue; // Define xQueue here
-
-int main(void)
-{
-    printf("Starting main function\n");
-
-    /* Create the queue. It can hold MAX_MESSAGES number of QueueMessage structures */
+static RetVal initComponents() {
     xQueue = xQueueCreate(MAX_MESSAGES, MAX_MSG_SIZE);
 
+    printf("xQueue Address: %p\n", (void *)xQueue);
+
     if (xQueue == NULL) {
-        printf("Failed to create queue\n");
-        return 1;  // Return error code if queue creation fails
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create queue\n");
+        return RET_ERROR;
     } else {
-        printf("Queue created successfully\n");
+        logMessage(LOG_LEVEL_INFO, "Main", "Queue created successfully\n");
+    }
+
+    if(initStateSemaphoreMaster() != RET_OK){
+        logMessage(LOG_LEVEL_ERROR, "Main", "Init State Semaphore Master faild");
+        return RET_ERROR;
+    }
+
+    if(initStateSemaphoreSlave() != RET_OK){
+        logMessage(LOG_LEVEL_ERROR, "Main", "Init State Semaphore Slave faild");
+        return RET_ERROR;
+    }
+
+    initMasterComm(xQueue);
+    initSlaveComm(xQueue);
+
+    return RET_OK;
+} 
+
+static RetVal createStateQueue(){
+    // Create the queue. It can hold MAX_MESSAGES number of QueueMessage structures
+   
+
+    return RET_OK;
+}
+
+static RetVal creatMasterTasks(){
+
+    /* Create the master task */
+    if (xTaskCreate(vMasterCommHandler, "MasterTask", PTHREAD_STACK_MIN, NULL, 
+                    TASTK_PRIO_MASTER_COMM_HANDLER, NULL) != pdPASS) {
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create MasterTask\n");
+        return RET_ERROR;
+    } else {
+        logMessage(LOG_LEVEL_INFO, "Main", "MasterTask created successfully\n");
     }
 
     /* Create the master task */
-    if (xTaskCreate(vMasterCommHandler, "MasterTask", PTHREAD_STACK_MIN, xQueue, 1, NULL) != pdPASS) {
-        printf("Failed to create MasterTask\n");
-        return 1;
+    if (xTaskCreate(vMasterStatusCheckHandler, "MasterStatusCheckHandler", PTHREAD_STACK_MIN, NULL, 
+                    TASTK_PRIO_MASTER_STATUS_CHECK_HANDLER, NULL) != pdPASS) {
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create MasterTask\n");
+        return RET_ERROR;
     } else {
-        printf("MasterTask created successfully\n");
+        logMessage(LOG_LEVEL_INFO, "Main", "MasterTask created successfully\n");
+    }
+}
+
+static RetVal creatSlaveTasks(){
+    TaskHandle_t slaveTaskHandels[TAKS_HADLERS_SIZE] = {NULL, NULL, NULL};
+
+    /* Create the slave task */
+    if (xTaskCreate(vSlaveCommHandler, "SlaveCommHandler", PTHREAD_STACK_MIN, NULL, 
+                    TASTK_PRIO_SLAVE_COMM_HANDLER, &slaveTaskHandels[COME_HANDLER_ID]) != pdPASS) {
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create SlaveTaskCommHandling\n");
+        return RET_ERROR;
+    } else {
+        logMessage(LOG_LEVEL_INFO, "Main", "SlaveTaskCommHandling created successfully\n");
     }
 
     /* Create the slave task */
-    if (xTaskCreate(vSlaveCommHandler, "SlaveCommHandler", PTHREAD_STACK_MIN, xQueue, 1, NULL) != pdPASS) {
-        printf("Failed to create SlaveTaskCommHandling\n");
-        return 1;
+    if (xTaskCreate(vSlaveTaskTestHandling, "SlaveTaskTestHandling", PTHREAD_STACK_MIN, NULL, 
+                    TASTK_PRIO_SLAVE_TEST_TASK_HANDLER, &slaveTaskHandels[TASK_TEST_HANDLER_ID]) != pdPASS) {
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create SlaveTaskTestHandling\n");
+        return RET_ERROR;
     } else {
-        printf("SlaveTaskCommHandling created successfully\n");
+        logMessage(LOG_LEVEL_INFO, "Main", "SlaveTaskTestHandling created successfully\n");
     }
 
     /* Create the slave task */
-    if (xTaskCreate(vSlaveTaskTestHandling, "SlaveTaskTestHandling", PTHREAD_STACK_MIN, NULL, 1, NULL) != pdPASS) {
-        printf("Failed to create SlaveTaskTestHandling\n");
-        return 1;
+    if (xTaskCreate(vSlaveStatusObservationHandler, "SlaveStatusObservationHandler", PTHREAD_STACK_MIN, NULL, 
+                    TASTK_PRIO_SLAVE_STATUS_OBSERVATION_HANDLING, &slaveTaskHandels[SLAVE_STATUS_OBSERVATION_HANDLER_ID]) != pdPASS) {
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create SlaveTaskTestHandling\n");
+        return RET_ERROR;
     } else {
-        printf("SlaveTaskTestHandling created successfully\n");
+        logMessage(LOG_LEVEL_INFO, "Main", "SlaveTaskTestHandling created successfully\n");
+    }
+
+    /* Create the slave task */
+    if (xTaskCreate(vRestartHandler, "RestartSlave", PTHREAD_STACK_MIN, NULL, 
+                    TASTK_PRIO_SLAVE_RESTAT_STATUS, NULL) != pdPASS) {
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create SlaveTaskTestHandling\n");
+        return RET_ERROR;
+    } else {
+        logMessage(LOG_LEVEL_INFO, "Main", "SlaveTaskTestHandling created successfully\n");
+    }
+
+    setTaskHandlers(&slaveTaskHandels[0]);
+    return RET_OK;
+}
+
+int main(void)
+{
+    if(createStateQueue() != RET_OK){
+        logMessage(LOG_LEVEL_ERROR, "Main", "Create State Queue faild");
+        return 1;
+    }
+   
+    if(initComponents() != RET_OK){
+        logMessage(LOG_LEVEL_ERROR, "Main", "Init Components faild");
+        return 1;
+    }
+
+    if(creatMasterTasks() != RET_OK){
+        logMessage(LOG_LEVEL_ERROR, "Main", "Create Master Tasks faild");
+        return 1;
+    }
+
+    if(creatSlaveTasks() != RET_OK){
+        logMessage(LOG_LEVEL_ERROR, "Main", "Create Slave Tasks faild");
+        return 1;
     }
 
     /* Start the FreeRTOS scheduler */
-    printf("Starting FreeRTOS scheduler\n");
     vTaskStartScheduler();
-
-    printf("Scheduler ended unexpectedly\n");
-    return 0; // Should never reach here unless there's an error
+    return 0; 
 }

@@ -10,4 +10,6 @@ build/./main.o: main.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
- master/include/master_handler.h slave/include/slave_handler.h
+ master/include/master_handler.h slave/include/slave_handler.h \
+ types/types.h slave/include/slave_restart_threads.h \
+ logger/include/logger.h

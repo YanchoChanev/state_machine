@@ -1,5 +1,5 @@
 build/./slave/src/slave_handler.o: slave/src/slave_handler.c \
- slave/include/slave_handler.h slave/include/slave_comm.h \
+ logger/include/logger.h slave/include/slave_comm.h types/types.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/FreeRTOS.h \
  include/FreeRTOSConfig.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/projdefs.h \
@@ -10,5 +10,7 @@ build/./slave/src/slave_handler.o: slave/src/slave_handler.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
+ slave/include/slave_handler.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
- types/types.h
+ slave/include/slave_state_machine.h \
+ master/include/master_state_machine.h

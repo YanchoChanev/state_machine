@@ -1,21 +1,41 @@
 #ifndef MASTER_STATE_MACHINE_H
 #define MASTER_STATE_MACHINE_H
 
-typedef enum{
-    IDEL,
-    PROCESSING,
-    ERROR,
-    MAX_STATE_MASTER
-} MasteStates;
+#include "types.h"
+#include "FreeRTOS.h"
+#include "queue.h"
 
-typedef enum {
-    SLEEP,
-    ACTIVE,
-    FAULT,
-    MAX_STATE_SLAVE
-} SlaveStates;
+/**
+ * @brief Initializes the state semaphore for master state synchronization.
+ * @return RET_OK if successful, RET_ERROR otherwise.
+ */
+RetVal initStateSemaphoreMaster();
 
-void setNewState(MasteStates state);
-MasteStates getCurrentState();
+/**
+ * @brief Dispatches states to appropriate state handlers.
+ * @param data The message received.
+ * @return RET_OK if successful, RET_ERROR otherwise.
+ */
+RetVal stateDispatcher(QueueMessage data);
 
-#endif MASTER_STATE_MACHINE_H
+/**
+ * @brief Retrieves the current state of the master.
+ * @return The current state of the master.
+ */
+MasterStates getCurrentState();
+
+/**
+ * @brief Sets the state queue handler.
+ * @param stateQueueHandle The queue handle to set.
+ * @return RET_OK if successful, RET_ERROR otherwise.
+ */
+RetVal setStateQueueHandlerMaster(QueueHandle_t stateQueueHandle);
+
+/**
+ * @brief Retrieves the state queue handler.
+ * @param stateQueueHandle The queue handle to retrieve.
+ * @return RET_OK if successful, RET_ERROR otherwise.
+ */
+RetVal getStateQueueHandlerMaster(QueueHandle_t stateQueueHandle);
+
+#endif // MASTER_STATE_MACHINE_H

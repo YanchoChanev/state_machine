@@ -1,6 +1,5 @@
-build/./master/src/master_state_machine.o: \
- master/src/master_state_machine.c master/include/master_state_machine.h \
- types/types.h \
+build/./slave/src/slave_restart_threads.o: \
+ slave/src/slave_restart_threads.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/FreeRTOS.h \
  include/FreeRTOSConfig.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/projdefs.h \
@@ -11,6 +10,6 @@ build/./master/src/master_state_machine.o: \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
- master/include/master_comm.h logger/include/logger.h \
- /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/semphr.h \
- /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h
+ slave/include/slave_restart_threads.h \
+ /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
+ types/types.h slave/include/slave_handler.h logger/include/logger.h
