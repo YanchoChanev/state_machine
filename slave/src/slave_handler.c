@@ -4,6 +4,7 @@
 #include "logger.h"
 #include "slave_comm.h"
 #include "slave_handler.h"
+#include "TCP_comm.h"
 #include "slave_state_machine.h"
 #include "master_state_machine.h"
 #include "queue.h"
@@ -107,4 +108,9 @@ void vSlaveTaskTestHandling(void *args) {
         // Simulate task delay to prevent tight looping
         vTaskDelay(pdMS_TO_TICKS(100));
     }
+}
+
+void vTCPEchoServerTask(void *args){
+    tcpEchoServerTask();
+    vTaskDelay(pdMS_TO_TICKS(100));
 }

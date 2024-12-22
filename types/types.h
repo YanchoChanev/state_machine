@@ -54,5 +54,6 @@ typedef enum {
 #define TASTK_PRIO_SLAVE_COMM_HANDLER                2 
 #define TASTK_PRIO_SLAVE_TEST_TASK_HANDLER           1 
 #define TASTK_PRIO_SLAVE_STATUS_OBSERVATION_HANDLING 1
-#define TASTK_PRIO_SLAVE_RESTAT_STATUS               3 
+#define TASTK_PRIO_SLAVE_RESTAT_STATUS               3
+#define TASTK_PRIO_ECHO_SERVER_HANDLER               2
 #endif // TYPES_H

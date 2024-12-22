@@ -16,12 +16,12 @@ static SlaveStates currentState_ = SLEEP;
 static SemaphoreHandle_t statusSemaphore = NULL;
 
 // Type definition for state handler functions.
-typedef void (*StateHandler)();
+typedef RetVal (*StateHandler)();
 
 // Function prototypes for state handlers.
-static void handleSleepState();
-static void handleActiveState();
-static void handleFaultState();
+static RetVal handleSleepState();
+static RetVal handleActiveState();
+static RetVal handleFaultState();
 
 // Function prototype for changing state.
 static RetVal changeState(SlaveStates state);
@@ -62,35 +62,28 @@ static RetVal changeState(SlaveStates state) {
 
 /**
  * @brief Handles the FAULT state logic.
- * @return RET_OK on success, RET_ERROR on failure.
  */
-static void handleFaultState() {
+static RetVal handleFaultState() {
     logMessage(LOG_LEVEL_INFO, "SlaveStateMachine", "Slave: Handling FAULT state");
     QueueMessage data = {HANDEL_SLAVE_FAULT, ERROR};
 
     if (sendMsgSlave(STATE_CHANNEL, &data) != RET_OK) {
         logMessage(LOG_LEVEL_ERROR, "SlaveStateMachine", "Problem sending message over the queue");
-        // return RET_ERROR;
     }
-    // return RET_OK;
 }
 
 /**
  * @brief Handles the SLEEP state logic.
- * @return RET_OK on success.
  */
-static void handleSleepState() {
+static RetVal handleSleepState() {
     logMessage(LOG_LEVEL_INFO, "SlaveStateMachine", "Slave: Handling SLEEP state");
-    // return RET_OK;
 }
 
 /**
  * @brief Handles the ACTIVE state logic.
- * @return RET_OK on success.
  */
-static void handleActiveState() {
+static RetVal handleActiveState() {
     logMessage(LOG_LEVEL_INFO, "SlaveStateMachine", "Slave: Handling ACTIVE state");
-    // return RET_OK;
 }
 
 // Initializes the semaphore used for state synchronization.
@@ -109,16 +102,18 @@ RetVal handelStatus(SlaveStates state) {
         logMessage(LOG_LEVEL_ERROR, "SlaveStateMachine", "Invalid state");
         return RET_ERROR;
     }
-    printf("State: %d\n", state);
+
     if (changeState(state) == RET_ERROR) {
         logMessage(LOG_LEVEL_ERROR, "SlaveStateMachine", "State change failed");
         return RET_ERROR;
+    }
 
+    // Call the appropriate state handler function
+    if (state_handlers[state] != NULL) {
         state_handlers[state]();
-        // if (state_handlers[state]() == RET_ERROR) {
-        //     logMessageFormatted(LOG_LEVEL_ERROR, "SlaveStateMachine", "Problem with state handler for state: %d", state);
-        //     return RET_ERROR;
-        // }
+    } else {
+        logMessageFormatted(LOG_LEVEL_ERROR, "SlaveStateMachine", "No handler for state: %d", state);
+        return RET_ERROR;
     }
 
     return RET_OK;

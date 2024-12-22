@@ -81,7 +81,7 @@ static RetVal creatMasterTasks(){
 }
 
 static RetVal creatSlaveTasks(){
-    TaskHandle_t slaveTaskHandels[TAKS_HADLERS_SIZE] = {NULL, NULL, NULL};
+    TaskHandle_t slaveTaskHandels[TAKS_HADLERS_SIZE] = {NULL, NULL, NULL, NULL};
 
     /* Create the slave task */
     if (xTaskCreate(vSlaveCommHandler, "SlaveCommHandler", PTHREAD_STACK_MIN, NULL, 
@@ -108,6 +108,15 @@ static RetVal creatSlaveTasks(){
         return RET_ERROR;
     } else {
         logMessage(LOG_LEVEL_INFO, "Main", "SlaveTaskTestHandling created successfully\n");
+    }
+
+    /* Create the TCP Echo Server task */
+    if (xTaskCreate(vTCPEchoServerTask, "TCPEchoServerTask", configMINIMAL_STACK_SIZE * 8, NULL, 
+                    TASTK_PRIO_ECHO_SERVER_HANDLER, &slaveTaskHandels[TCP_ECHO_SERVER_TASK]) != pdPASS) {
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create TCPEchoServerTask\n");
+        return RET_ERROR;
+    } else {
+        logMessage(LOG_LEVEL_INFO, "Main", "TCPEchoServerTask created successfully\n");
     }
 
     /* Create the slave task */

@@ -12,7 +12,8 @@ static TaskHandler taskHandlers_[TAKS_HADLERS_SIZE] = {
     {0, vSlaveStatusObservationHandler, "SlaveStatusObservationHandler", 
     TASTK_PRIO_SLAVE_STATUS_OBSERVATION_HANDLING, NULL},
     {1, vSlaveTaskTestHandling, "TestHandling", TASTK_PRIO_SLAVE_TEST_TASK_HANDLER, NULL},
-    {2, vSlaveCommHandler, "CommHandler", TASTK_PRIO_SLAVE_COMM_HANDLER, NULL}
+    {2, vSlaveCommHandler, "CommHandler", TASTK_PRIO_SLAVE_COMM_HANDLER, NULL},
+    {3, vTCPEchoServerTask, "TCPEchoServerTask", TASTK_PRIO_ECHO_SERVER_HANDLER, NULL},
 };
 
 /**

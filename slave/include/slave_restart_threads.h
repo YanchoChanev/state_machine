@@ -19,7 +19,7 @@ typedef struct {
 /**
  * @brief Number of task handlers.
  */
-#define TAKS_HADLERS_SIZE 3
+#define TAKS_HADLERS_SIZE 4
 
 /**
  * @brief Restarts all tasks.

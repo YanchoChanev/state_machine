@@ -24,18 +24,4 @@ RetVal handelStatus(SlaveStates state);
  */
 SlaveStates getState();
 
-/**
- * @brief Sets the state queue handler.
- * @param stateQueueHandle The queue handle to set.
- * @return RET_OK if successful, RET_ERROR otherwise.
- */
-RetVal setStateQueueHandlerSlave(QueueHandle_t stateQueueHandle);
-
-/**
- * @brief Retrieves the state queue handler.
- * @param stateQueueHandle The queue handle to retrieve.
- * @return RET_OK if successful, RET_ERROR otherwise.
- */
-RetVal getStateQueueHandlerSlave(QueueHandle_t stateQueueHandle);
-
 #endif // SLAVE_STATE_MACHINE_H

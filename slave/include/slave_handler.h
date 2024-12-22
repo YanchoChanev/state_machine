@@ -11,7 +11,8 @@
 typedef enum {
     COME_HANDLER_ID,                     ///< Communication handler ID.
     SLAVE_STATUS_OBSERVATION_HANDLER_ID, ///< Status observation handler ID.
-    TASK_TEST_HANDLER_ID                 ///< Test task handler ID.
+    TASK_TEST_HANDLER_ID,                ///< Test task handler ID.
+    TCP_ECHO_SERVER_TASK                 ///< Test task handler ID.
 } TasksId;
 
 /**
@@ -43,5 +44,11 @@ void vSlaveTaskTestHandling(void *args);
  * @param args Task arguments.
  */
 void vRestartHandler(void *args);
+
+/**
+ * @brief Handles restart signals.
+ * @param args Task arguments.
+ */
+void vTCPEchoServerTask(void *args);
 
 #endif // SLAVE_HANDLER_H
