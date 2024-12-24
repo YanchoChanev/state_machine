@@ -5,29 +5,48 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
-typedef enum {
-    STATE_CHANNEL,
-    REST_CHANNEL
-}ChannelId;
+/**
+ * @file slave_comm.h
+ * @brief Header file for the Slave Communication module.
+ *
+ * This file contains declarations for functions that manage inter-task communication
+ * within the slave system using FreeRTOS queues. It provides mechanisms for
+ * initializing communication channels, sending messages, and receiving messages.
+ */
 
 /**
- * @brief Initializes the restart queue.
- * @return RET_OK on success, RET_ERROR on failure.
+ * @brief Initialize the slave communication module.
+ *
+ * Sets up the necessary communication queues for managing inter-task communication.
+ * This function ensures proper initialization of state communication channels.
+ *
+ * @param stateQueueHandler Queue handle for state communication.
+ * @return RET_OK if initialization was successful, RET_ERROR otherwise.
  */
 RetVal initSlaveComm(QueueHandle_t stateQueueHandler);
 
-
 /**
- * @brief Sends a message to the slave queue.
- * @param data Pointer to the data to send.
+ * @brief Send a message through the specified communication channel.
+ *
+ * Sends data over the specified communication channel. The channel identifier
+ * determines which queue the message will be sent to.
+ *
+ * @param channeId Identifier of the communication channel.
+ * @param data Pointer to the data to be sent.
+ * @return RET_OK if the message was successfully sent, RET_ERROR otherwise.
  */
-RetVal sendMsgSlave(ChannelId channeId, const void *data);
+RetVal sendMsgSlave(const void *data);
 
 /**
- * @brief Receives a message from the slave queue.
+ * @brief Receive a message from the specified communication channel.
+ *
+ * Receives data from the specified communication channel. The function blocks
+ * until data is available or a timeout occurs.
+ *
+ * @param channeId Identifier of the communication channel.
  * @param data Pointer to store the received data.
- * @return RET_OK if successful, RET_ERROR otherwise.
+ * @return RET_OK if a message was successfully received, RET_ERROR otherwise.
  */
-RetVal reciveMsgSlave(ChannelId channeId, void *data);
+RetVal reciveMsgSlave(void *data);
 
 #endif // SLAVE_COMM_H

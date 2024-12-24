@@ -10,5 +10,5 @@ build/./master/src/master_comm.o: master/src/master_comm.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
- slave/include/slave_comm.h types/types.h \
+ master/include/master_comm.h types/types.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h

@@ -7,40 +7,59 @@
 #include "master_state_machine.h"
 #include "logger.h"
 
-// Handles master communication tasks.
-void vMasterCommHandler(void *args) {
-    logMessage(LOG_LEVEL_INFO, "MasterHandler", "Master communication handler started");
-    QueueMessage data;
+/**
+ * @file master_handler.c
+ * @brief Implements communication and status tasks for the master system.
+ *
+ * This file defines tasks responsible for handling communication with the slave
+ * system and monitoring the master's status. It ensures proper message handling
+ * and state management.
+ */
 
-    while (1) {
-        // printf("Master communication handler\n");
+/**
+ * @brief Handles master communication tasks.
+ *
+ * This task listens for incoming messages from the slave system, processes them,
+ * and dispatches the appropriate state handlers based on the received data.
+ *
+ * @param args Pointer to task arguments (unused in this implementation).
+ */
+void vMasterCommHandler(void *args) {
+    SlaveStates data = MAX_STATE_MASTER;
+    MasterStates curentData = MAX_STATE_MASTER;
+
+    while(1){
         if (reciveMsgMaster(&data) != RET_OK) {
             logMessage(LOG_LEVEL_ERROR, "MasterHandler", "Failed to receive message");
         }
 
-        logMessageFormatted(LOG_LEVEL_DEBUG, "MasterHandler", "Message ID = %d, message state = %d", data.msg_id, data.state);
-        // printf("Message ID = %d, message state = %d\n", data.msg_id, data.state);
-        if (stateDispatcher(data) != RET_OK) {
-            logMessage(LOG_LEVEL_ERROR, "MasterHandler", "Failed to dispatch state");
+        if(data != curentData){
+            if (stateDispatcher(data) != RET_OK) {
+                logMessage(LOG_LEVEL_ERROR, "MasterHandler", "Failed to handle status");
+            }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_COMM_HANDLER));
     }
-    // vTaskDelay(pdMS_TO_TICKS(100));
 }
 
-//Handles master status check tasks.
+/**
+ * @brief Handles master status check tasks.
+ *
+ * This task periodically retrieves the current state of the master system
+ * and sends it to the slave system via the communication channel.
+ *
+ * @param args Pointer to task arguments (unused in this implementation).
+ */
 void vMasterStatusCheckHandler(void *args) {
-    logMessage(LOG_LEVEL_INFO, "MasterHandler", "Master status check handler started");
-    QueueMessage data = {SLAVE_CURRENT_STATUS, 0};
+    MasterStates currentState = MAX_STATE_MASTER;
 
-    while (1) {
-        if (sendMsgMaster(&data) != RET_OK) {
+    while(1){
+        (void)getCurrentState(&currentState);
+
+        if (sendMsgMaster(&currentState) != RET_OK) {
             logMessage(LOG_LEVEL_ERROR, "MasterHandler", "Failed to send message");
         }
-
-        logMessage(LOG_LEVEL_DEBUG, "MasterHandler", "Sent status check message to slave");
-        vTaskDelay(pdMS_TO_TICKS(90));
+        vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_STATUS_CHECK_HANDLER));
     }
-    // vTaskDelay(pdMS_TO_TICKS(100));
 }

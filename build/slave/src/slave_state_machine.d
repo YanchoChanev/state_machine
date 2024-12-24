@@ -12,4 +12,6 @@ build/./slave/src/slave_state_machine.o: slave/src/slave_state_machine.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
  logger/include/logger.h slave/include/slave_comm.h types/types.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
- slave/include/slave_state_machine.h
+ slave/include/slave_state_machine.h \
+ slave/include/slave_restart_threads.h \
+ /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h

@@ -6,111 +6,110 @@
 #include "slave_handler.h"
 #include "TCP_comm.h"
 #include "slave_state_machine.h"
-#include "master_state_machine.h"
 #include "queue.h"
 
-// Handles restart signals.
-void vRestartHandler(void *args) {
-    uint8_t signal;
-    
+/**
+ * @file slave_handler.c
+ * @brief Handles various tasks related to slave communication, observation, and TCP communication.
+ *
+ * This file contains task handlers for managing restart signals, observing slave status,
+ * and managing TCP echo server tasks.
+ */
 
-    while (1) {
-        if (reciveMsgSlave(REST_CHANNEL, &signal) == RET_OK) {
-            logMessage(LOG_LEVEL_DEBUG, "SlaveHandler", "Received restart signal");
-            if (signal == 1) {
-                handelStatus(SLEEP);
-                vTaskDelay(pdMS_TO_TICKS(10000));
-                if (restartAllTasks() != RET_OK) {
-                    logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to restart all tasks");
+/**
+ * @brief Queue handle for reset handler task.
+ *
+ * Used for receiving restart signals from the reset queue.
+ */
+QueueHandle_t resetHandlerTask_ = NULL;
+
+/**
+ * @brief Handles restart signals for the slave system.
+ *
+ * This task listens for restart signals via the REST_CHANNEL. Upon receiving a valid restart signal,
+ * it sets the system state to SLEEP, waits for a predefined delay, and then attempts to restart all tasks.
+ *
+ * @param args Pointer to task arguments (used for passing reset queue handle).
+ */
+void vRestartHandler(void *args) {
+    uint8_t signal = 0;
+    resetHandlerTask_ = (QueueHandle_t)args;
+
+    if (resetHandlerTask_ != NULL) {
+        while (1) {
+            // Ensure the queue handle is valid
+            configASSERT(resetHandlerTask_);
+            
+            // Receive a restart signal from the REST_CHANNEL
+            if (xQueueReceive(resetHandlerTask_, &signal, portMAX_DELAY) == pdPASS) {
+                logMessage(LOG_LEVEL_DEBUG, "SlaveHandler", "Received restart signal");
+                vTaskDelay(pdMS_TO_TICKS(3000));
+                
+                if (signal == 1) {
+                    // Set the system to SLEEP state and delay before restarting tasks
+                    vTaskDelay(pdMS_TO_TICKS(1000));
+                    
+                    if (restartAllTasks() != RET_OK) {
+                        logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to restart all tasks");
+                    }
                 }
             }
+            
+            // Delay to prevent task starvation
+            vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_SLAVE_RESTAT_STATUS));
         }
-        vTaskDelay(pdMS_TO_TICKS(100));
+    } else {
+        logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Reset handler is NULL");
     }
 }
 
-// Observes and retrieves the slave's status.
+/**
+ * @brief Observes and retrieves the slave's status.
+ *
+ * This task listens for messages on the STATE_CHANNEL. Upon receiving a valid message,
+ * it retrieves the current slave state and sends an updated status message back via the STATE_CHANNEL.
+ *
+ * @param args Pointer to task arguments (unused in this implementation).
+ */
 void vSlaveStatusObservationHandler(void *args) {
-    logMessage(LOG_LEVEL_INFO, "SlaveHandler", "vSlaveStatusObservationHandler created");
-    QueueMessage data;
-
+    MasterStates data = MAX_STATE_MASTER;
+    SlaveStatesCondition sendData = {MAX_STATE_SLAVE, FALSE};
+    
     while (1) {
-        if (reciveMsgSlave(STATE_CHANNEL, &data) != RET_OK) {
+        // Receive a message from the STATE_CHANNEL
+        if (reciveMsgSlave(&data) != RET_OK) {
             logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to receive message");
         } else {
-            logMessageFormatted(LOG_LEVEL_DEBUG, "SlaveHandler", "Message ID = %d, message state = %d", data.msg_id, data.state);
-            data.msg_id = SLAVE_CURRENT_STATUS;
-            data.state = getState();
-            // printf("State: %d\n", data.state);
-            if (sendMsgSlave(STATE_CHANNEL, &data) != RET_OK) {
-                logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to send message");
-            }
-        }
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
-
-// Handles communication tasks.
-void vSlaveCommHandler(void *args) {
-    logMessage(LOG_LEVEL_INFO, "SlaveHandler", "vSlaveCommHandler created");
-    QueueMessage data;
-
-    while (1) {
-        if (reciveMsgSlave(STATE_CHANNEL, &data) == RET_OK) {
-            logMessageFormatted(LOG_LEVEL_DEBUG, "SlaveHandler", "Message ID = %d, message state = %d", data.msg_id, data.state);
-            if (data.msg_id == RESET_SLAVE) {
-                handelStatus(SLEEP);
-                uint8_t signal = 1;
-                if (sendMsgSlave(REST_CHANNEL, &signal) != pdPASS) { // Send restart signal
-                    logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to send restart signal");
+            if (getState(&sendData) != RET_ERROR) {
+                // Check if state has changed
+                if (sendData.status != data) {
+                    if (sendMsgSlave(&sendData.status) != RET_OK) {
+                        logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to send updated status message");
+                    }
+                } else if (data == ERROR) {
+                    // Handle RESET state if error occurs
+                    handelStatus(RESET);
+                    if (sendMsgSlave(&sendData.status) != RET_OK) {
+                        logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to send reset status message");
+                    }
                 }
             }
         }
-        vTaskDelay(pdMS_TO_TICKS(100));
+        
+        // Delay to prevent task starvation
+        vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_SLAVE_STATUS_OBSERVATION_HANDLING));
     }
 }
 
-// Handles test tasks with user input.
-void vSlaveTaskTestHandling(void *args) {
-    char input[16];
-    int number;
-    logMessage(LOG_LEVEL_DEBUG, "SlaveHandler", "vSlaveTaskTestHandling created");
-
-    while (1) {
-        printf("Enter a number between 0 and 2: ");
-        fflush(stdout);
-
-        while (1) {
-            if (fgets(input, sizeof(input), stdin) != NULL) {
-                // Remove newline character if present
-                input[strcspn(input, "\n")] = 0;
-
-                // Convert input to an integer
-                number = atoi(input);
-
-                // Validate the number
-                if (number >= 0 && number <= 2) {
-                    logMessageFormatted(LOG_LEVEL_INFO, "SlaveHandler", "Valid input received: %d", number);
-                    handelStatus(number);
-                    break; // Exit the inner loop on valid input
-                } else {
-                    logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Invalid input. Please enter a number between 0 and 2.");
-                }
-            } else {
-                // logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Error reading input.");
-            }
-
-            // Clear the input buffer
-            while (getchar() != '\n' && getchar() != EOF);
-            vTaskDelay(pdMS_TO_TICKS(100));
-        }
-
-        // Simulate task delay to prevent tight looping
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
-
-void vTCPEchoServerTask(void *args){
+/**
+ * @brief TCP Echo Server Task.
+ *
+ * This task starts and manages the TCP Echo Server, allowing it to listen for incoming
+ * TCP connections and echo back received data.
+ *
+ * @param args Pointer to task arguments (unused in this implementation).
+ */
+void vTCPEchoServerTask(void *args) {
+    logMessage(LOG_LEVEL_INFO, "SlaveHandler", "vTCPEchoServerTask started");
     tcpEchoServerTask();
-    vTaskDelay(pdMS_TO_TICKS(100));
 }

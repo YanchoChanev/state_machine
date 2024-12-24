@@ -5,83 +5,88 @@
 #include "logger.h"
 #include "semphr.h"
 
-// Queue handle for state signals.
-static QueueHandle_t stateQueueHandle_ = NULL;
+/**
+ * @file master_state_machine.c
+ * @brief Implements the state machine for managing master states.
+ *
+ * This file defines the logic for managing and transitioning between different
+ * operational states of a master system. The state transitions are thread-safe
+ * and logged for clarity and debugging.
+ */
 
-// Current state of the master.
-static MasterStates currentState_ = IDLE;
+/**
+ * @brief Maps slave states to corresponding master states.
+ *
+ * This mapping ensures proper state transitions between slave and master systems.
+ */
+typedef struct {
+    SlaveStates slaveState; ///< State of the slave system.
+    MasterStates masterState; ///< Corresponding state in the master system.
+} SlaveToMasterMap;
 
-// Semaphore for state synchronization.
-static SemaphoreHandle_t stateSemaphore_;
+SlaveToMasterMap slaveToMasterMap[] = {
+    {SLEEP, IDLE},
+    {ACTIVE, PROCESSING},
+    {FAULT, ERROR},
+};
 
-// Function pointer type for state handler functions.
-typedef RetVal (*StateHandler)();
+/**
+ * @brief Structure for handling the master's state and synchronization.
+ *
+ * - currentState: Tracks the current state.
+ * - stateSemaphore: Mutex for ensuring thread-safe state transitions.
+ */
+typedef struct {
+    MasterStates currentState; ///< Current state of the master system.
+    SemaphoreHandle_t stateSemaphore; ///< Semaphore for state synchronization.
+} MasterStatesConditionHandler;
 
-// Function prototypes for state handlers.
+static MasterStatesConditionHandler masterStateMachineCondition = {IDLE, NULL};
+
+// Forward declarations for state handler functions
 static RetVal handleIdleState();
 static RetVal handleProcessState();
 static RetVal handleErrorState();
 
-// State handler function array.
-static StateHandler stateHandlers_[MAX_STATE_MASTER] = {
-    handleIdleState,
-    handleProcessState,
-    handleErrorState,
-    NULL
+/**
+ * @brief Master state machine mapping states to their handler functions.
+ */
+typedef struct {
+    MasterStates state; ///< State identifier.
+    RetVal (*handler)(void); ///< Pointer to the handler function for the state.
+} MasterStateMachine;
+
+/**
+ * @brief Array mapping each state to its corresponding handler function.
+ */
+MasterStateMachine masterFSM[] = {
+    {IDLE, handleIdleState},
+    {PROCESSING, handleProcessState},
+    {ERROR, handleErrorState},
 };
 
 /**
- * @brief Internal function for handles the IDLE state logic.
- * @return RET_OK on success.
- */
-static RetVal handleIdleState() {
-    logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling idle state");
-    return RET_OK;
-}
-
-/**
- * @brief Internal function for handles the PROCESS state logic.
- * @return RET_OK on success.
- */
-static RetVal handleProcessState() {
-    logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling process state");
-    return RET_OK;
-}
-
-/**
- * @brief Internal function for handles the ERROR state logic.
- * @return RET_OK on success, RET_ERROR on failure.
- */
-static RetVal handleErrorState() {
-
-    RetVal ret = RET_OK;
-    QueueMessage data = {RESET_SLAVE, ERROR};
-    if (sendMsgMaster(&data) != RET_OK) {
-        logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Send message to slave failed");
-        ret = RET_ERROR;
-    }
-    return ret;
-}
-
-/**
- * @brief Internal function for sets a new state for the master state machine.
+ * @brief Sets a new state for the master state machine.
+ *
+ * Ensures thread safety using a semaphore before transitioning to a new state.
+ *
  * @param state The new state to transition to.
  * @return RET_OK on success, RET_ERROR on failure.
  */
 static RetVal setNewState(MasterStates state) {
     RetVal ret = RET_OK;
-    if (xSemaphoreTake(stateSemaphore_, (TickType_t)10) == pdTRUE) {
+    if (xSemaphoreTake(masterStateMachineCondition.stateSemaphore, (TickType_t)10) == pdTRUE) {
         if (state >= MAX_STATE_MASTER) {
             logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Invalid state");
             ret = RET_ERROR;
         } else {
-            if (currentState_ != state) {
-                currentState_ = state;
-                logMessageFormatted(LOG_LEVEL_INFO, "MasterStateMachine", "New status is %d", currentState_);
-                stateHandlers_[state]();
+            if (masterStateMachineCondition.currentState != state) {
+                masterStateMachineCondition.currentState = state;
+                logMessageFormatted(LOG_LEVEL_INFO, "MasterStateMachine", "New status is %d", 
+                                    masterStateMachineCondition.currentState);
             }
         }
-        xSemaphoreGive(stateSemaphore_);
+        xSemaphoreGive(masterStateMachineCondition.stateSemaphore);
     } else {
         logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to take semaphore");
         ret = RET_ERROR;
@@ -89,97 +94,95 @@ static RetVal setNewState(MasterStates state) {
     return ret;
 }
 
-// Initializes the state semaphore for master state synchronization.
+/**
+ * @brief Handles the IDLE state logic.
+ *
+ * Transitions the master system into the IDLE state and logs the operation.
+ *
+ * @return RET_OK on success.
+ */
+static RetVal handleIdleState() {
+    setNewState(IDLE);
+    logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling idle state");
+    return RET_OK;
+}
+
+/**
+ * @brief Handles the PROCESSING state logic.
+ *
+ * Transitions the master system into the PROCESSING state and logs the operation.
+ *
+ * @return RET_OK on success.
+ */
+static RetVal handleProcessState() {
+    setNewState(PROCESSING);
+    logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling process state");
+    return RET_OK;
+}
+
+/**
+ * @brief Handles the ERROR state logic.
+ *
+ * Transitions the master system into the ERROR state and logs the operation.
+ *
+ * @return RET_OK on success.
+ */
+static RetVal handleErrorState() {
+    setNewState(ERROR);
+    logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling error state");
+    return RET_OK;
+}
+
+/**
+ * @brief Initializes the semaphore used for state synchronization.
+ *
+ * Creates a binary semaphore to ensure thread safety during state transitions.
+ *
+ * @return RET_OK if initialization succeeded, RET_ERROR otherwise.
+ */
 RetVal initStateSemaphoreMaster() {
-    stateSemaphore_ = xSemaphoreCreateBinary();
-    if (stateSemaphore_ == NULL) {
+    masterStateMachineCondition.stateSemaphore = xSemaphoreCreateBinary();
+    if (masterStateMachineCondition.stateSemaphore == NULL) {
         logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to create state semaphore");
         return RET_ERROR;
     }
-    if (xSemaphoreGive(stateSemaphore_) != pdTRUE) {
+    if (xSemaphoreGive(masterStateMachineCondition.stateSemaphore) != pdTRUE) {
         logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to give state semaphore");
         return RET_ERROR;
     }
     return RET_OK;
 }
 
-// Dispatches states to appropriate state handlers.
-RetVal stateDispatcher(QueueMessage data) {
-    // printf("Message ID = %d, message state = %d\n", data.msg_id, data.state);
-    // RetVal ret = RET_OK;
-    // if (data.msg_id == HANDEL_SLAVE_FAULT) {
-    //     if (data.state == FAULT) {
-    //         setNewState(ERROR);
-    //     }
-    // } else {
-    //     switch (data.state) {
-    //         case ACTIVE:
-    //             if (setNewState(PROCESSING) != RET_OK) {
-    //                 logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to set state PROCESSING");
-    //                 ret = RET_ERROR;
-    //             }
-    //             break;
-    //         case SLEEP:
-    //             if (setNewState(IDLE) != RET_OK) {
-    //                 logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to set state IDLE");
-    //                 ret = RET_ERROR;
-    //             }
-    //             break;
-    //     }
-    // }
-
-    switch(data.state)
-    {
-        case ACTIVE:
-            if(setNewState(PROCESSING) != RET_OK)
-            {
-                logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to set state PROCESSING");
-                return RET_ERROR;
-            }
-            break;
-        case SLEEP:
-            if(setNewState(IDLE) != RET_OK)
-            {
-                logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to set state IDLE");
-                return RET_ERROR;
-            }
-            break;
-        case FAULT:
-            if(setNewState(ERROR) != RET_OK)
-            {
-                logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to set state ERROR");
-                return RET_ERROR;
-            }
-            break;
-        default:
-            logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Invalid state");
-            return RET_ERROR;
+/**
+ * @brief Dispatches the state to the appropriate handler.
+ *
+ * Maps slave states to master states and calls the respective handler.
+ *
+ * @param data The slave state to dispatch.
+ * @return RET_OK on success, RET_ERROR otherwise.
+ */
+RetVal stateDispatcher(SlaveStates data) {
+    RetVal ret = RET_OK;
+    MasterStates state = slaveToMasterMap[data].masterState;
+    if (state >= MAX_STATE_MASTER) {
+        ret = RET_ERROR;
     }
-    // return ret;
+    logMessageFormatted(LOG_LEVEL_DEBUG, "MasterStateMachine", "Dispatching state %d", data);
+
+    if(state != masterStateMachineCondition.currentState){
+        ret = masterFSM[state].handler();
+    }
+
+    return ret;
 }
 
-// Retrieves the current state of the master.
-MasterStates getCurrentState() {
-    return currentState_;
-}
-
-// Sets the state queue handler.
-RetVal setStateQueueHandlerMaster(QueueHandle_t stateQueueHandle) {
-    if (stateQueueHandle != NULL) {
-        stateQueueHandle_ = stateQueueHandle;
-        return RET_OK;
-    } else {
-        logMessage(LOG_LEVEL_ERROR, "SlaveStateMachine", "stateQueueHandle is NULL");
-        return RET_ERROR;
-    }
-}
-
-// Retrieves the state queue handler.
-RetVal getStateQueueHandlerMaster(QueueHandle_t stateQueueHandle) {
-    if (stateQueueHandle_ == NULL) {
-        logMessage(LOG_LEVEL_ERROR, "SlaveStateMachine", "stateQueueHandle is NULL");
-        return RET_ERROR;
-    }
-    stateQueueHandle = stateQueueHandle_;
+/**
+ * @brief Retrieves the current state of the master.
+ *
+ * @param currentState Pointer to store the current state.
+ * @return RET_OK on success.
+ */
+RetVal getCurrentState(MasterStates* currentState) {
+    *currentState = masterStateMachineCondition.currentState;
     return RET_OK;
 }

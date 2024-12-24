@@ -6,48 +6,59 @@
 #include "types.h"
 
 /**
+ * @file slave_handler.h
+ * @brief Header file for managing slave handler tasks.
+ *
+ * This file contains declarations for task handler functions and structures
+ * used to manage various tasks in the slave system, including status observation,
+ * task restarting, and TCP communication.
+ */
+
+/**
  * @brief Enum defining task IDs.
  */
 typedef enum {
-    COME_HANDLER_ID,                     ///< Communication handler ID.
     SLAVE_STATUS_OBSERVATION_HANDLER_ID, ///< Status observation handler ID.
-    TASK_TEST_HANDLER_ID,                ///< Test task handler ID.
     TCP_ECHO_SERVER_TASK                 ///< Test task handler ID.
 } TasksId;
 
 /**
- * @brief Sets task handlers for the slave system.
- * @param taskHandlers Array of task handlers.
+ * @brief Set task handlers for task management.
+ *
+ * Registers an array of task handlers to manage tasks efficiently
+ * within the slave system.
+ *
+ * @param taskHandlers Pointer to an array of task handlers.
  */
 void setTaskHandlers(TaskHandle_t *taskHandlers);
 
 /**
- * @brief Handles communication tasks.
- * @param args Task arguments.
- */
-void vSlaveCommHandler(void *args);
-
-/**
- * @brief Observes and retrieves the slave's status.
- * @param args Task arguments.
+ * @brief Status observation handler task function.
+ *
+ * Monitors and logs the status of the slave system. It listens for status
+ * updates and ensures appropriate state transitions when necessary.
+ *
+ * @param args Pointer to task arguments (can be used to pass parameters).
  */
 void vSlaveStatusObservationHandler(void *args);
 
 /**
- * @brief Handles test tasks with user input.
- * @param args Task arguments.
- */
-void vSlaveTaskTestHandling(void *args);
-
-/**
- * @brief Handles restart signals.
- * @param args Task arguments.
+ * @brief Restart handler task function.
+ *
+ * Listens for restart signals, processes them, and triggers the restart
+ * sequence for all managed tasks.
+ *
+ * @param args Pointer to task arguments (can be used to pass parameters).
  */
 void vRestartHandler(void *args);
 
 /**
- * @brief Handles restart signals.
- * @param args Task arguments.
+ * @brief TCP Echo server task function.
+ *
+ * Initializes and manages a TCP echo server task. It listens for incoming
+ * TCP connections, processes client messages, and echoes responses.
+ *
+ * @param args Pointer to task arguments (can be used to pass parameters).
  */
 void vTCPEchoServerTask(void *args);
 

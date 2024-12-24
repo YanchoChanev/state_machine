@@ -4,20 +4,35 @@
 #include "slave_handler.h"
 #include "logger.h"
 
-// Queue handle for restart signals.
-static QueueHandle_t restartQueueHandle_ = NULL;
+/**
+ * @file slave_restart_threads.c
+ * @brief Manages task restarts and lifecycle in the slave system.
+ *
+ * This module provides functionality for restarting, recreating,
+ * and managing tasks in a structured way using FreeRTOS.
+ */
 
-// Task handlers array.
+/**
+ * @brief Array of task handlers with their metadata.
+ *
+ * Each task handler includes:
+ * - Task ID
+ * - Task function pointer
+ * - Task name
+ * - Task priority
+ * - Task handle
+ */
 static TaskHandler taskHandlers_[TAKS_HADLERS_SIZE] = {
-    {0, vSlaveStatusObservationHandler, "SlaveStatusObservationHandler", 
+    {SLAVE_STATUS_OBSERVATION_HANDLER_ID, vSlaveStatusObservationHandler, "SlaveStatusObservationHandler", 
     TASTK_PRIO_SLAVE_STATUS_OBSERVATION_HANDLING, NULL},
-    {1, vSlaveTaskTestHandling, "TestHandling", TASTK_PRIO_SLAVE_TEST_TASK_HANDLER, NULL},
-    {2, vSlaveCommHandler, "CommHandler", TASTK_PRIO_SLAVE_COMM_HANDLER, NULL},
-    {3, vTCPEchoServerTask, "TCPEchoServerTask", TASTK_PRIO_ECHO_SERVER_HANDLER, NULL},
+    {TCP_ECHO_SERVER_TASK, vTCPEchoServerTask, "TCPEchoServerTask", TASTK_PRIO_ECHO_SERVER_HANDLER, NULL},
 };
 
 /**
- * @brief Internal function for deletes all tasks in the task handler array.
+ * @brief Deletes all tasks in the task handler array.
+ *
+ * Iterates through all task handlers and deletes any tasks
+ * with non-NULL handles to ensure proper cleanup.
  */
 static void deleteAllTasks() {
     for (uint8_t i = 0; i < TAKS_HADLERS_SIZE; i++) {
@@ -30,14 +45,18 @@ static void deleteAllTasks() {
 }
 
 /**
- * @brief Internal function for recreates all tasks in the task handler array.
+ * @brief Recreates all tasks in the task handler array.
+ *
+ * Iterates through all task handlers and attempts to recreate tasks
+ * with their corresponding function, name, priority, and handle.
+ *
  * @return RET_OK on success, RET_ERROR on failure.
  */
 static RetVal recreateAllTasks() {
     for (uint8_t i = 0; i < TAKS_HADLERS_SIZE; i++) {
         logMessageFormatted(LOG_LEVEL_INFO, "SlaveRestartThread", "Recreating task %d", i);
         if (xTaskCreate(taskHandlers_[i].taskFunction, taskHandlers_[i].taskName,
-                        configMINIMAL_STACK_SIZE, NULL, taskHandlers_[i].taskPrio, 
+                        configMINIMAL_STACK_SIZE * 16, NULL, taskHandlers_[i].taskPrio, 
                         &taskHandlers_[i].taskHandler) != pdPASS) {
             logMessageFormatted(LOG_LEVEL_ERROR, "SlaveRestartThread", "Failed to create task %d", i);
             return RET_ERROR;
@@ -48,7 +67,14 @@ static RetVal recreateAllTasks() {
     return RET_OK;
 }
 
-// Restarts all tasks.
+/**
+ * @brief Restarts all tasks in the system.
+ *
+ * This function deletes all currently running tasks and recreates them.
+ * It also resets the system state to SLEEP upon successful recreation.
+ *
+ * @return RET_OK if all tasks are restarted successfully, RET_ERROR otherwise.
+ */
 RetVal restartAllTasks() {
     logMessage(LOG_LEVEL_INFO, "SlaveRestartThread", "Restarting all tasks");
     deleteAllTasks();
@@ -65,9 +91,15 @@ RetVal restartAllTasks() {
     return RET_OK;
 }
 
-// Sets task handlers for the slave system.
+/**
+ * @brief Sets the task handlers for the slave system.
+ *
+ * Assigns external task handles to the internal task handler array.
+ *
+ * @param taskHandlers Array of task handles to assign.
+ */
 void setTaskHandlers(TaskHandle_t *taskHandlers) {
     for (int i = 0; i < TAKS_HADLERS_SIZE; i++) {
         taskHandlers_[i].taskHandler = taskHandlers[i];
     }
-}
+}   

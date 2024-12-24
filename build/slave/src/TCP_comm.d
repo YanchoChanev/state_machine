@@ -1,4 +1,5 @@
 build/./slave/src/TCP_comm.o: slave/src/TCP_comm.c \
+ logger/include/logger.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/FreeRTOS.h \
  include/FreeRTOSConfig.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/projdefs.h \

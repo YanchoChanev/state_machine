@@ -6,22 +6,45 @@
 #include "queue.h"
 
 /**
- * @brief Initializes the semaphore used for state synchronization.
- * @return RET_OK if successful, RET_ERROR otherwise.
+ * @file slave_state_machine.h
+ * @brief Header file for the Slave State Machine module.
+ *
+ * This file contains the declarations for managing the state machine
+ * of a slave system. It includes functions for initializing the state machine,
+ * handling state transitions, and retrieving the current state.
  */
-RetVal initStateSemaphoreSlave();
+
+/**
+ * @brief Initializes the semaphore used for state synchronization.
+ *
+ * This function sets up the necessary synchronization primitives, such as semaphores,
+ * to ensure safe and thread-safe state transitions within the slave system.
+ *
+ * @param resetHandler Queue handle for handling reset state transitions.
+ * @return RET_OK if initialization was successful, RET_ERROR otherwise.
+ */
+RetVal initStateMachineSlave(QueueHandle_t resetHandler);
 
 /**
  * @brief Handles a change in the slave's status/state.
+ *
+ * This function processes a requested state transition and ensures that
+ * the slave transitions to the specified state safely.
+ *
  * @param state The new state to transition to.
- * @return RET_OK if successful, RET_ERROR otherwise.
+ * @return RET_OK if the state change was successful, RET_ERROR otherwise.
  */
 RetVal handelStatus(SlaveStates state);
 
 /**
  * @brief Retrieves the current state of the slave.
- * @return The current state.
+ *
+ * This function fetches the current operational state of the slave system
+ * and stores it in the provided pointer.
+ *
+ * @param currentStatus Pointer to store the current state of the slave.
+ * @return RET_OK if the current state was successfully retrieved, RET_ERROR otherwise.
  */
-SlaveStates getState();
+RetVal getState(SlaveStates* currentStatus);
 
 #endif // SLAVE_STATE_MACHINE_H

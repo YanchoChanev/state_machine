@@ -12,5 +12,4 @@ build/./slave/src/slave_handler.o: slave/src/slave_handler.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
  slave/include/slave_handler.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
- slave/include/TCP_comm.h slave/include/slave_state_machine.h \
- master/include/master_state_machine.h
+ slave/include/TCP_comm.h slave/include/slave_state_machine.h

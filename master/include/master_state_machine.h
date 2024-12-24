@@ -6,36 +6,43 @@
 #include "queue.h"
 
 /**
+ * @file master_state_machine.h
+ * @brief Header file for the Master State Machine module.
+ *
+ * This file defines the public interface for managing the master state machine,
+ * including initialization, state dispatching, and state retrieval.
+ */
+
+/**
  * @brief Initializes the state semaphore for master state synchronization.
- * @return RET_OK if successful, RET_ERROR otherwise.
+ *
+ * This function sets up the semaphore required for thread-safe state transitions
+ * in the master state machine.
+ *
+ * @return RET_OK if the semaphore was successfully initialized, RET_ERROR otherwise.
  */
 RetVal initStateSemaphoreMaster();
 
 /**
  * @brief Dispatches states to appropriate state handlers.
- * @param data The message received.
- * @return RET_OK if successful, RET_ERROR otherwise.
+ *
+ * This function processes incoming slave states and maps them to their respective
+ * handler functions within the master state machine.
+ *
+ * @param data The state received from the slave.
+ * @return RET_OK if the state was successfully dispatched, RET_ERROR otherwise.
  */
-RetVal stateDispatcher(QueueMessage data);
+RetVal stateDispatcher(SlaveStates data);
 
 /**
  * @brief Retrieves the current state of the master.
- * @return The current state of the master.
+ *
+ * This function fetches the current state of the master and stores it in the
+ * provided pointer.
+ *
+ * @param currentState Pointer to store the current master state.
+ * @return RET_OK if the current state was successfully retrieved, RET_ERROR otherwise.
  */
-MasterStates getCurrentState();
-
-/**
- * @brief Sets the state queue handler.
- * @param stateQueueHandle The queue handle to set.
- * @return RET_OK if successful, RET_ERROR otherwise.
- */
-RetVal setStateQueueHandlerMaster(QueueHandle_t stateQueueHandle);
-
-/**
- * @brief Retrieves the state queue handler.
- * @param stateQueueHandle The queue handle to retrieve.
- * @return RET_OK if successful, RET_ERROR otherwise.
- */
-RetVal getStateQueueHandlerMaster(QueueHandle_t stateQueueHandle);
+RetVal getCurrentState(MasterStates* currentState);
 
 #endif // MASTER_STATE_MACHINE_H
