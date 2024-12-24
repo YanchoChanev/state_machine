@@ -20,7 +20,7 @@
  *
  * @param stateQueueHandle_ Queue handle for state communication.
  */
-void initMasterComm(QueueHandle_t stateQueueHandle_);
+RetVal_t initMasterComm(QueueHandle_t stateQueueHandle_);
 
 /**
  * @brief Sends a message to the slave queue.
@@ -31,7 +31,7 @@ void initMasterComm(QueueHandle_t stateQueueHandle_);
  * @param data Pointer to the data to send.
  * @return RET_OK if the message was successfully sent, RET_ERROR otherwise.
  */
-RetVal sendMsgMaster(const void *data);
+RetVal_t sendMsgMaster(const void *data);
 
 /**
  * @brief Receives a message from the slave queue.
@@ -41,6 +41,6 @@ RetVal sendMsgMaster(const void *data);
  * @param data Pointer to store the received data.
  * @return RET_OK if a message was successfully received, RET_ERROR otherwise.
  */
-RetVal reciveMsgMaster(void *data);
+RetVal_t reciveMsgMaster(void *data);
 
 #endif // SLAVE_COMM_H

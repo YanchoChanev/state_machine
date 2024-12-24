@@ -4,6 +4,7 @@
 #include "queue.h"
 #include "slave_comm.h"
 #include "task.h"
+#include "comm_cfg.h"
 
 /**
  * @file slave_comm.c
@@ -14,18 +15,8 @@
  */
 
 /**
- * @brief Time to wait for space in the queue when sending a message (in ms).
- */
-#define TICK_TO_WAIT_SEND_MS 100
-
-/**
- * @brief Delay after sending a message (in ms).
- */
-#define DELAY_SEND_MS 10
-
-/**
  * @brief Queue handle for managing state messages.
- *
+ 
  * Used for inter-task communication within the slave system.
  */
 static QueueHandle_t stateQueueHandler_ = NULL;
@@ -76,7 +67,7 @@ static BaseType_t queueReceive(void *data, TickType_t ticks_to_wait) {
  * @param stateQueueHandler Handle to the state queue.
  * @return RET_OK if initialization succeeded, RET_ERROR otherwise.
  */
-RetVal initSlaveComm(QueueHandle_t stateQueueHandler) {
+RetVal_t initSlaveComm(QueueHandle_t stateQueueHandler) {
     stateQueueHandler_ = stateQueueHandler;
     
     if (stateQueueHandler_ == NULL) {
@@ -96,7 +87,7 @@ RetVal initSlaveComm(QueueHandle_t stateQueueHandler) {
  * @param data Pointer to the data to send.
  * @return RET_OK if the message was successfully sent, RET_ERROR otherwise.
  */
-RetVal sendMsgSlave(const void *data) {
+RetVal_t sendMsgSlave(const void *data) {
     if (queueSend(data, pdMS_TO_TICKS(TICK_TO_WAIT_SEND_MS)) != pdPASS) {
         logMessage(LOG_LEVEL_ERROR, "SlaveComm", "Failed to send message to the queue");
         return RET_ERROR;
@@ -117,7 +108,7 @@ RetVal sendMsgSlave(const void *data) {
  * @param data Pointer to store the received data.
  * @return RET_OK if a message was successfully received, RET_ERROR otherwise.
  */
-RetVal reciveMsgSlave(void *data) {
+RetVal_t reciveMsgSlave(void *data) {
     if (queueReceive(data, portMAX_DELAY) == pdPASS) {
         logMessage(LOG_LEVEL_DEBUG, "SlaveComm", "Message received successfully");
         return RET_OK;

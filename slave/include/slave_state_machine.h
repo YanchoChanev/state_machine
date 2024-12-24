@@ -5,6 +5,8 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
+#include "state_mashine_types.h"
+
 /**
  * @file slave_state_machine.h
  * @brief Header file for the Slave State Machine module.
@@ -23,7 +25,7 @@
  * @param resetHandler Queue handle for handling reset state transitions.
  * @return RET_OK if initialization was successful, RET_ERROR otherwise.
  */
-RetVal initStateMachineSlave(QueueHandle_t resetHandler);
+RetVal_t initStateMachineSlave(QueueHandle_t resetHandler);
 
 /**
  * @brief Handles a change in the slave's status/state.
@@ -34,7 +36,7 @@ RetVal initStateMachineSlave(QueueHandle_t resetHandler);
  * @param state The new state to transition to.
  * @return RET_OK if the state change was successful, RET_ERROR otherwise.
  */
-RetVal handelStatus(SlaveStates state);
+RetVal_t handelStatus(SlaveStates state);
 
 /**
  * @brief Retrieves the current state of the slave.
@@ -45,6 +47,6 @@ RetVal handelStatus(SlaveStates state);
  * @param currentStatus Pointer to store the current state of the slave.
  * @return RET_OK if the current state was successfully retrieved, RET_ERROR otherwise.
  */
-RetVal getState(SlaveStates* currentStatus);
+RetVal_t getState(SlaveStates* currentStatus);
 
 #endif // SLAVE_STATE_MACHINE_H

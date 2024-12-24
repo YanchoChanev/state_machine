@@ -11,4 +11,5 @@ build/./slave/src/slave_comm.o: slave/src/slave_comm.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
  slave/include/slave_comm.h types/types.h \
- /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h
+ /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
+ config/comm_cfg.h

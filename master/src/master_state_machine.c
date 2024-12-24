@@ -14,6 +14,8 @@
  * and logged for clarity and debugging.
  */
 
+#define SEMAPHOR_TICKS 10
+
 /**
  * @brief Maps slave states to corresponding master states.
  *
@@ -25,9 +27,9 @@ typedef struct {
 } SlaveToMasterMap;
 
 SlaveToMasterMap slaveToMasterMap[] = {
-    {SLEEP, IDLE},
-    {ACTIVE, PROCESSING},
-    {FAULT, ERROR},
+    {SLAVE_STATE_SLEEP,  MASTESR_STATE_IDLE},
+    {SLAVE_STATE_ACTIVE, MASTESR_STATE_PROCESSING},
+    {SLAVE_STATE_FAULT,  MASTESR_STATE_ERROR},
 };
 
 /**
@@ -41,28 +43,28 @@ typedef struct {
     SemaphoreHandle_t stateSemaphore; ///< Semaphore for state synchronization.
 } MasterStatesConditionHandler;
 
-static MasterStatesConditionHandler masterStateMachineCondition = {IDLE, NULL};
+static MasterStatesConditionHandler masterStateMachineCondition = {MASTESR_STATE_IDLE, NULL};
 
 // Forward declarations for state handler functions
-static RetVal handleIdleState();
-static RetVal handleProcessState();
-static RetVal handleErrorState();
+static RetVal_t handleIdleState();
+static RetVal_t handleProcessState();
+static RetVal_t handleErrorState();
 
 /**
  * @brief Master state machine mapping states to their handler functions.
  */
 typedef struct {
     MasterStates state; ///< State identifier.
-    RetVal (*handler)(void); ///< Pointer to the handler function for the state.
+    RetVal_t (*handler)(void); ///< Pointer to the handler function for the state.
 } MasterStateMachine;
 
 /**
  * @brief Array mapping each state to its corresponding handler function.
  */
 MasterStateMachine masterFSM[] = {
-    {IDLE, handleIdleState},
-    {PROCESSING, handleProcessState},
-    {ERROR, handleErrorState},
+    {MASTESR_STATE_IDLE,       handleIdleState},
+    {MASTESR_STATE_PROCESSING, handleProcessState},
+    {MASTESR_STATE_ERROR,      handleErrorState},
 };
 
 /**
@@ -73,10 +75,10 @@ MasterStateMachine masterFSM[] = {
  * @param state The new state to transition to.
  * @return RET_OK on success, RET_ERROR on failure.
  */
-static RetVal setNewState(MasterStates state) {
-    RetVal ret = RET_OK;
-    if (xSemaphoreTake(masterStateMachineCondition.stateSemaphore, (TickType_t)10) == pdTRUE) {
-        if (state >= MAX_STATE_MASTER) {
+static RetVal_t setNewState(MasterStates state) {
+    RetVal_t ret = RET_OK;
+    if (xSemaphoreTake(masterStateMachineCondition.stateSemaphore, (TickType_t)SEMAPHOR_TICKS) == pdTRUE) {
+        if (state >= MASTESR_STATE_MAX) {
             logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Invalid state");
             ret = RET_ERROR;
         } else {
@@ -101,8 +103,8 @@ static RetVal setNewState(MasterStates state) {
  *
  * @return RET_OK on success.
  */
-static RetVal handleIdleState() {
-    setNewState(IDLE);
+static RetVal_t handleIdleState() {
+    setNewState(MASTESR_STATE_IDLE);
     logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling idle state");
     return RET_OK;
 }
@@ -114,8 +116,8 @@ static RetVal handleIdleState() {
  *
  * @return RET_OK on success.
  */
-static RetVal handleProcessState() {
-    setNewState(PROCESSING);
+static RetVal_t handleProcessState() {
+    setNewState(MASTESR_STATE_PROCESSING);
     logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling process state");
     return RET_OK;
 }
@@ -127,8 +129,8 @@ static RetVal handleProcessState() {
  *
  * @return RET_OK on success.
  */
-static RetVal handleErrorState() {
-    setNewState(ERROR);
+static RetVal_t handleErrorState() {
+    setNewState(MASTESR_STATE_ERROR);
     logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling error state");
     return RET_OK;
 }
@@ -140,7 +142,7 @@ static RetVal handleErrorState() {
  *
  * @return RET_OK if initialization succeeded, RET_ERROR otherwise.
  */
-RetVal initStateSemaphoreMaster() {
+RetVal_t initStateSemaphoreMaster() {
     masterStateMachineCondition.stateSemaphore = xSemaphoreCreateBinary();
     if (masterStateMachineCondition.stateSemaphore == NULL) {
         logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Failed to create state semaphore");
@@ -161,10 +163,10 @@ RetVal initStateSemaphoreMaster() {
  * @param data The slave state to dispatch.
  * @return RET_OK on success, RET_ERROR otherwise.
  */
-RetVal stateDispatcher(SlaveStates data) {
-    RetVal ret = RET_OK;
+RetVal_t stateDispatcher(SlaveStates data) {
+    RetVal_t ret = RET_OK;
     MasterStates state = slaveToMasterMap[data].masterState;
-    if (state >= MAX_STATE_MASTER) {
+    if (state >= MASTESR_STATE_MAX) {
         ret = RET_ERROR;
     }
     logMessageFormatted(LOG_LEVEL_DEBUG, "MasterStateMachine", "Dispatching state %d", data);
@@ -182,7 +184,7 @@ RetVal stateDispatcher(SlaveStates data) {
  * @param currentState Pointer to store the current state.
  * @return RET_OK on success.
  */
-RetVal getCurrentState(MasterStates* currentState) {
+RetVal_t getCurrentState(MasterStates* currentState) {
     *currentState = masterStateMachineCondition.currentState;
     return RET_OK;
 }

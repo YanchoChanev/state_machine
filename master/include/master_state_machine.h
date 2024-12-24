@@ -4,6 +4,7 @@
 #include "types.h"
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "state_mashine_types.h"
 
 /**
  * @file master_state_machine.h
@@ -21,7 +22,7 @@
  *
  * @return RET_OK if the semaphore was successfully initialized, RET_ERROR otherwise.
  */
-RetVal initStateSemaphoreMaster();
+RetVal_t initStateSemaphoreMaster();
 
 /**
  * @brief Dispatches states to appropriate state handlers.
@@ -32,7 +33,7 @@ RetVal initStateSemaphoreMaster();
  * @param data The state received from the slave.
  * @return RET_OK if the state was successfully dispatched, RET_ERROR otherwise.
  */
-RetVal stateDispatcher(SlaveStates data);
+RetVal_t stateDispatcher(SlaveStates data);
 
 /**
  * @brief Retrieves the current state of the master.
@@ -43,6 +44,6 @@ RetVal stateDispatcher(SlaveStates data);
  * @param currentState Pointer to store the current master state.
  * @return RET_OK if the current state was successfully retrieved, RET_ERROR otherwise.
  */
-RetVal getCurrentState(MasterStates* currentState);
+RetVal_t getCurrentState(MasterStates* currentState);
 
 #endif // MASTER_STATE_MACHINE_H

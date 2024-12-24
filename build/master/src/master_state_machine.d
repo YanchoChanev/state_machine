@@ -11,6 +11,7 @@ build/./master/src/master_state_machine.o: \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
- master/include/master_comm.h logger/include/logger.h \
+ types/state_mashine_types.h types/types.h master/include/master_comm.h \
+ logger/include/logger.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/semphr.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h

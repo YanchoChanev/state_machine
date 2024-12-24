@@ -6,7 +6,10 @@
 #include "slave_handler.h"
 #include "TCP_comm.h"
 #include "slave_state_machine.h"
+#include "slave_restart_threads.h"
 #include "queue.h"
+
+#include "thread_handler_cfg.h"
 
 /**
  * @file slave_handler.c
@@ -43,12 +46,9 @@ void vRestartHandler(void *args) {
             // Receive a restart signal from the REST_CHANNEL
             if (xQueueReceive(resetHandlerTask_, &signal, portMAX_DELAY) == pdPASS) {
                 logMessage(LOG_LEVEL_DEBUG, "SlaveHandler", "Received restart signal");
-                vTaskDelay(pdMS_TO_TICKS(3000));
+                vTaskDelay(pdMS_TO_TICKS(DELAY_BEFORE_RESTART));
                 
                 if (signal == 1) {
-                    // Set the system to SLEEP state and delay before restarting tasks
-                    vTaskDelay(pdMS_TO_TICKS(1000));
-                    
                     if (restartAllTasks() != RET_OK) {
                         logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to restart all tasks");
                     }
@@ -72,8 +72,8 @@ void vRestartHandler(void *args) {
  * @param args Pointer to task arguments (unused in this implementation).
  */
 void vSlaveStatusObservationHandler(void *args) {
-    MasterStates data = MAX_STATE_MASTER;
-    SlaveStatesCondition sendData = {MAX_STATE_SLAVE, FALSE};
+    MasterStates data = MASTESR_STATE_IDLE;
+    SlaveStates sendData = SLAVE_STATE_MAX;
     
     while (1) {
         // Receive a message from the STATE_CHANNEL
@@ -82,14 +82,14 @@ void vSlaveStatusObservationHandler(void *args) {
         } else {
             if (getState(&sendData) != RET_ERROR) {
                 // Check if state has changed
-                if (sendData.status != data) {
-                    if (sendMsgSlave(&sendData.status) != RET_OK) {
+                if (sendData != data) {
+                    if (sendMsgSlave(&sendData) != RET_OK) {
                         logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to send updated status message");
                     }
-                } else if (data == ERROR) {
+                } else if (data == MASTESR_STATE_ERROR) {
                     // Handle RESET state if error occurs
-                    handelStatus(RESET);
-                    if (sendMsgSlave(&sendData.status) != RET_OK) {
+                    handelStatus(SLAVE_INPUT_STATE_ERROR_OR_RESET);
+                    if (sendMsgSlave(&sendData) != RET_OK) {
                         logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to send reset status message");
                     }
                 }

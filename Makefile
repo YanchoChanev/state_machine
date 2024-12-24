@@ -18,6 +18,7 @@ INCLUDE_DIRS += -I${FREERTOS_DIR}/Source/portable/ThirdParty/GCC/Posix
 INCLUDE_DIRS += -I./master/include
 INCLUDE_DIRS += -I./slave/include
 INCLUDE_DIRS += -I./types
+INCLUDE_DIRS += -I./config
 INCLUDE_DIRS += -I./logger/include
 
 SOURCE_FILES := ./main.c

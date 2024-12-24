@@ -8,8 +8,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slave_state_machine.h"
+#include "TCP_comm_cfg.h"
+#include "thread_handler_cfg.h"
 
-#define PORT 5003
+
 
 /**
  * @file tcp_server.c
@@ -28,7 +30,7 @@
  * @param port Port number to bind the socket.
  * @return RET_OK on success, RET_ERROR on failure.
  */
-static RetVal createSocket(int32_t* server_fd, int16_t port){
+static RetVal_t createSocket(int32_t* server_fd, int16_t port){
     *server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (*server_fd < 0) {
         logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Socket creation failed for port %d, with error: %s", 
@@ -49,7 +51,7 @@ static RetVal createSocket(int32_t* server_fd, int16_t port){
  * @param port Port number.
  * @return RET_OK on success, RET_ERROR on failure.
  */
-static RetVal reuseTheAddress(int32_t server_fd, int32_t* opt, int16_t port){
+static RetVal_t reuseTheAddress(int32_t server_fd, int32_t* opt, int16_t port){
     // Set socket options to reuse the address
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, opt, sizeof(*opt)) < 0) {
         perror("setsockopt failed");
@@ -97,7 +99,7 @@ static void configureServerAddress(struct sockaddr_in* server_addr,
  * @param port Port number.
  * @return RET_OK on success, RET_ERROR on failure.
  */
-static RetVal bindSocket(int32_t server_fd, struct sockaddr* server_addr, int32_t size, int16_t port){
+static RetVal_t bindSocket(int32_t server_fd, struct sockaddr* server_addr, int32_t size, int16_t port){
     // Bind socket
     if (bind(server_fd, server_addr, size) < 0) {
         perror("Bind failed");
@@ -118,9 +120,9 @@ static RetVal bindSocket(int32_t server_fd, struct sockaddr* server_addr, int32_
  * @param port Port number.
  * @return RET_OK on success, RET_ERROR on failure.
  */
-static RetVal startListening(int32_t server_fd, int16_t port){
+static RetVal_t startListening(int32_t server_fd, int16_t port){
     // Start listening
-    if (listen(server_fd, 5) < 0) {
+    if (listen(server_fd, CONNECTION_REQUESTS) < 0) {
         logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Listen failed for port: %d, with error: %s", 
                             PORT, strerror(errno));
         close(server_fd);
@@ -140,7 +142,7 @@ static RetVal startListening(int32_t server_fd, int16_t port){
  * @param client_len Pointer to client address length.
  * @return RET_OK on success, RET_ERROR on failure.
  */
-static RetVal acceptClientConnection(int32_t* client_fd, int32_t server_fd, struct sockaddr_in* client_addr, socklen_t* client_len) {
+static RetVal_t acceptClientConnection(int32_t* client_fd, int32_t server_fd, struct sockaddr_in* client_addr, socklen_t* client_len) {
     *client_fd = accept(server_fd, (struct sockaddr*)client_addr, client_len);
     if (*client_fd < 0) {
         // logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Accept failed with error: %s", strerror(errno));
@@ -159,10 +161,11 @@ static RetVal acceptClientConnection(int32_t* client_fd, int32_t server_fd, stru
  * @param buffer Pointer to the message buffer.
  * @return RET_OK on success, RET_ERROR on failure.
  */
-static RetVal processClientMessage(const char* buffer) {
+static RetVal_t processClientMessage(const char* buffer) {
     int32_t id = 0;
     int32_t data = 0;
-    if (sscanf(buffer, "ID=%d;DATA=%d", &id, &data) == 2) {
+
+    if (sscanf(buffer, "ID=%d;DATA=%d", &id, &data) == TCP_MESSAGE_CLIENT_PARCED_INPUTS) {
         logMessageFormatted(LOG_LEVEL_DEBUG, "TCPComm", "Parsed ID: %d\n", id);
         logMessageFormatted(LOG_LEVEL_DEBUG, "TCPComm", "Parsed DATA: %d\n", data);
     } else {
@@ -189,7 +192,7 @@ static void handleClientCommunication(int32_t client_fd, char* buffer) {
 
     while (1) {
         do {
-            bytes_received = recv(client_fd, buffer, 1023, 0);
+            bytes_received = recv(client_fd, buffer, TCP_BUFFER_SIZE, 0);
         } while (bytes_received < 0 && errno == EINTR);
 
         if (bytes_received > 0) {
@@ -218,8 +221,8 @@ void tcpEchoServerTask() {
     int32_t server_fd, client_fd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len = sizeof(client_addr);
-    char buffer[1024] = {0};
-    int opt = 1;
+    char buffer[TCP_BUFFER_SIZE] = {0};
+    int opt = OPT_VALUE;
 
     if(createSocket(&server_fd, PORT) != RET_OK){
         vTaskDelete(NULL);

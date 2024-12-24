@@ -6,6 +6,7 @@
 #include "master_comm.h"
 #include "master_state_machine.h"
 #include "logger.h"
+#include "thread_handler_cfg.h"
 
 /**
  * @file master_handler.c
@@ -25,8 +26,8 @@
  * @param args Pointer to task arguments (unused in this implementation).
  */
 void vMasterCommHandler(void *args) {
-    SlaveStates data = MAX_STATE_MASTER;
-    MasterStates curentData = MAX_STATE_MASTER;
+    SlaveStates data = SLAVE_STATE_MAX;
+    MasterStates curentData = MASTESR_STATE_MAX;
 
     while(1){
         if (reciveMsgMaster(&data) != RET_OK) {
@@ -52,7 +53,7 @@ void vMasterCommHandler(void *args) {
  * @param args Pointer to task arguments (unused in this implementation).
  */
 void vMasterStatusCheckHandler(void *args) {
-    MasterStates currentState = MAX_STATE_MASTER;
+    MasterStates currentState = MASTESR_STATE_MAX;
 
     while(1){
         (void)getCurrentState(&currentState);

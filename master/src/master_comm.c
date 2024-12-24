@@ -4,6 +4,7 @@
 #include "queue.h"
 #include "master_comm.h"
 #include "task.h"
+#include "comm_cfg.h"
 
 /**
  * @file master_comm.c
@@ -12,16 +13,6 @@
  * This file defines functions for initializing communication queues,
  * sending messages, and receiving messages between the master and slave systems.
  */
-
-/**
- * @brief Time to wait for space in the queue when sending a message (in ms).
- */
-#define TICK_TO_WAIT_SEND_MS 100
-
-/**
- * @brief Delay after sending a message (in ms).
- */
-#define DELAY_SEND_MS 10
 
 /**
  * @brief Queue handle for state signals.
@@ -69,8 +60,14 @@ static BaseType_t queueReceive(void *data, TickType_t ticks_to_wait) {
  *
  * @param stateQueueHandle Queue handle for state communication.
  */
-void initMasterComm(QueueHandle_t stateQueueHandle) {
+RetVal_t initMasterComm(QueueHandle_t stateQueueHandle) {
+    if(stateQueueHandle == NULL) {
+        logMessage(LOG_LEVEL_ERROR, "MasterComm", "Queue handle is NULL");
+        return RET_ERROR;
+    }
+
     stateQueueHandle_ = stateQueueHandle;
+    return RET_OK;
 }
 
 /**
@@ -81,7 +78,7 @@ void initMasterComm(QueueHandle_t stateQueueHandle) {
  * @param data Pointer to the data to send.
  * @return RET_OK if successful, RET_ERROR otherwise.
  */
-RetVal sendMsgMaster(const void *data) {
+RetVal_t sendMsgMaster(const void *data) {
     if (queueSend(data, pdMS_TO_TICKS(TICK_TO_WAIT_SEND_MS)) != pdPASS) {
         logMessage(LOG_LEVEL_ERROR, "MasterComm", "Failed to send message to the queue");
         return RET_ERROR;
@@ -99,7 +96,7 @@ RetVal sendMsgMaster(const void *data) {
  * @param data Pointer to store the received data.
  * @return RET_OK if successful, RET_ERROR otherwise.
  */
-RetVal reciveMsgMaster(void *data) {
+RetVal_t reciveMsgMaster(void *data) {
     if (queueReceive(data, portMAX_DELAY) == pdPASS) {
         logMessage(LOG_LEVEL_DEBUG, "MasterComm", "Message received successfully");
         return RET_OK;

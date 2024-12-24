@@ -11,4 +11,5 @@ build/./master/src/master_comm.o: master/src/master_comm.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
  master/include/master_comm.h types/types.h \
- /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h
+ /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
+ config/comm_cfg.h

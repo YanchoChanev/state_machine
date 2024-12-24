@@ -12,4 +12,6 @@ build/./slave/src/slave_handler.o: slave/src/slave_handler.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
  slave/include/slave_handler.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
- slave/include/TCP_comm.h slave/include/slave_state_machine.h
+ slave/include/TCP_comm.h slave/include/slave_state_machine.h \
+ types/state_mashine_types.h types/types.h \
+ slave/include/slave_restart_threads.h config/thread_handler_cfg.h

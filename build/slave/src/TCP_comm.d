@@ -11,4 +11,6 @@ build/./slave/src/TCP_comm.o: slave/src/TCP_comm.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
  slave/include/slave_state_machine.h types/types.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
- /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h
+ /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
+ types/state_mashine_types.h types/types.h config/TCP_comm_cfg.h \
+ config/thread_handler_cfg.h

@@ -23,7 +23,7 @@
  * @param stateQueueHandler Queue handle for state communication.
  * @return RET_OK if initialization was successful, RET_ERROR otherwise.
  */
-RetVal initSlaveComm(QueueHandle_t stateQueueHandler);
+RetVal_t initSlaveComm(QueueHandle_t stateQueueHandler);
 
 /**
  * @brief Send a message through the specified communication channel.
@@ -35,7 +35,7 @@ RetVal initSlaveComm(QueueHandle_t stateQueueHandler);
  * @param data Pointer to the data to be sent.
  * @return RET_OK if the message was successfully sent, RET_ERROR otherwise.
  */
-RetVal sendMsgSlave(const void *data);
+RetVal_t sendMsgSlave(const void *data);
 
 /**
  * @brief Receive a message from the specified communication channel.
@@ -47,6 +47,6 @@ RetVal sendMsgSlave(const void *data);
  * @param data Pointer to store the received data.
  * @return RET_OK if a message was successfully received, RET_ERROR otherwise.
  */
-RetVal reciveMsgSlave(void *data);
+RetVal_t reciveMsgSlave(void *data);
 
 #endif // SLAVE_COMM_H

@@ -29,14 +29,6 @@ typedef struct {
 } TaskHandler;
 
 /**
- * @brief Number of task handlers defined.
- *
- * This macro defines the total number of task handlers that can be managed
- * by the slave restart system.
- */
-#define TAKS_HADLERS_SIZE 2
-
-/**
  * @brief Restart all tasks managed by the task handlers.
  *
  * Iterates through all registered task handlers, terminates the existing tasks,
@@ -44,7 +36,7 @@ typedef struct {
  *
  * @return RET_OK if all tasks were successfully restarted, RET_ERROR otherwise.
  */
-RetVal restartAllTasks();
+RetVal_t restartAllTasks();
 
 /**
  * @brief Retrieve the restart queue handle.
@@ -54,7 +46,7 @@ RetVal restartAllTasks();
  * @param restartQueueHandle Pointer to store the queue handle.
  * @return RET_OK if the queue handle was successfully retrieved, RET_ERROR otherwise.
  */
-RetVal getRestartQueue(QueueHandle_t restartQueueHandle);
+RetVal_t getRestartQueue(QueueHandle_t restartQueueHandle);
 
 /**
  * @brief Set the task handlers for task management.
@@ -74,6 +66,6 @@ void setTaskHandlers(TaskHandle_t *taskHandlers);
  * @param resetQueueHandler Queue handle for managing task resets.
  * @return RET_OK if initialization succeeded, RET_ERROR otherwise.
  */
-RetVal initResetHandler(QueueHandle_t resetQueueHandler);
+RetVal_t initResetHandler(QueueHandle_t resetQueueHandler);
 
 #endif // SLAVE_RESTART_THREADS_H

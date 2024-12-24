@@ -3,6 +3,8 @@
 #include "slave_restart_threads.h"
 #include "slave_handler.h"
 #include "logger.h"
+#include "thread_handler_cfg.h"
+#include "state_mashine_types.h"
 
 /**
  * @file slave_restart_threads.c
@@ -22,7 +24,7 @@
  * - Task priority
  * - Task handle
  */
-static TaskHandler taskHandlers_[TAKS_HADLERS_SIZE] = {
+static TaskHandler taskHandlers_[SLAVE_TAKS_HANDLERS_SIZE] = {
     {SLAVE_STATUS_OBSERVATION_HANDLER_ID, vSlaveStatusObservationHandler, "SlaveStatusObservationHandler", 
     TASTK_PRIO_SLAVE_STATUS_OBSERVATION_HANDLING, NULL},
     {TCP_ECHO_SERVER_TASK, vTCPEchoServerTask, "TCPEchoServerTask", TASTK_PRIO_ECHO_SERVER_HANDLER, NULL},
@@ -35,7 +37,7 @@ static TaskHandler taskHandlers_[TAKS_HADLERS_SIZE] = {
  * with non-NULL handles to ensure proper cleanup.
  */
 static void deleteAllTasks() {
-    for (uint8_t i = 0; i < TAKS_HADLERS_SIZE; i++) {
+    for (uint8_t i = 0; i < SLAVE_TAKS_HANDLERS_SIZE; i++) {
         if (taskHandlers_[i].taskHandler != NULL) {
             logMessageFormatted(LOG_LEVEL_INFO, "SlaveRestartThread", "Deleting task %d", i);
             vTaskDelete(taskHandlers_[i].taskHandler);
@@ -52,8 +54,8 @@ static void deleteAllTasks() {
  *
  * @return RET_OK on success, RET_ERROR on failure.
  */
-static RetVal recreateAllTasks() {
-    for (uint8_t i = 0; i < TAKS_HADLERS_SIZE; i++) {
+static RetVal_t recreateAllTasks() {
+    for (uint8_t i = 0; i < SLAVE_TAKS_HANDLERS_SIZE; i++) {
         logMessageFormatted(LOG_LEVEL_INFO, "SlaveRestartThread", "Recreating task %d", i);
         if (xTaskCreate(taskHandlers_[i].taskFunction, taskHandlers_[i].taskName,
                         configMINIMAL_STACK_SIZE * 16, NULL, taskHandlers_[i].taskPrio, 
@@ -75,7 +77,7 @@ static RetVal recreateAllTasks() {
  *
  * @return RET_OK if all tasks are restarted successfully, RET_ERROR otherwise.
  */
-RetVal restartAllTasks() {
+RetVal_t restartAllTasks() {
     logMessage(LOG_LEVEL_INFO, "SlaveRestartThread", "Restarting all tasks");
     deleteAllTasks();
 
@@ -84,7 +86,7 @@ RetVal restartAllTasks() {
         return RET_ERROR;
     }
 
-    if (handelStatus(SLEEP) != RET_OK) {
+    if (handelStatus(SLAVE_STATE_SLEEP) != RET_OK) {
         logMessage(LOG_LEVEL_ERROR, "SlaveRestartThread", "Failed to set state ACTIVE");
         return RET_ERROR;
     }
@@ -99,7 +101,7 @@ RetVal restartAllTasks() {
  * @param taskHandlers Array of task handles to assign.
  */
 void setTaskHandlers(TaskHandle_t *taskHandlers) {
-    for (int i = 0; i < TAKS_HADLERS_SIZE; i++) {
+    for (int i = 0; i < SLAVE_TAKS_HANDLERS_SIZE; i++) {
         taskHandlers_[i].taskHandler = taskHandlers[i];
     }
 }   

@@ -12,4 +12,5 @@ build/./master/src/master_handler.o: master/src/master_handler.c \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
  master/include/master_comm.h master/include/master_state_machine.h \
- logger/include/logger.h
+ types/state_mashine_types.h types/types.h logger/include/logger.h \
+ config/thread_handler_cfg.h

@@ -12,4 +12,5 @@ build/./slave/src/slave_restart_threads.o: \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h \
  slave/include/slave_restart_threads.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
- types/types.h slave/include/slave_handler.h logger/include/logger.h
+ types/types.h slave/include/slave_handler.h logger/include/logger.h \
+ config/thread_handler_cfg.h types/state_mashine_types.h types/types.h

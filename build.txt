@@ -728,17 +728,17 @@ In file included from /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/ta
  1713 | uint8_t ucQueueGetQueueType( QueueHandle_t xQueue ) PRIVILEGED_FUNCTION;
       |                              ^~~~~~~~~~~~~
 ./master/include/master_state_machine.h:31:35: error: expected declaration specifiers or ‘...’ before ‘QueueHandle_t’
-   31 | RetVal setStateQueueHandlerMaster(QueueHandle_t stateQueueHandle);
+   31 | RetVal_t setStateQueueHandlerMaster(QueueHandle_t stateQueueHandle);
       |                                   ^~~~~~~~~~~~~
 ./master/include/master_state_machine.h:38:35: error: expected declaration specifiers or ‘...’ before ‘QueueHandle_t’
-   38 | RetVal getStateQueueHandlerMaster(QueueHandle_t stateQueueHandle);
+   38 | RetVal_t getStateQueueHandlerMaster(QueueHandle_t stateQueueHandle);
       |                                   ^~~~~~~~~~~~~
 In file included from master/src/master_state_machine.c:3:
 ./master/include/master_comm.h:11:22: error: expected declaration specifiers or ‘...’ before ‘QueueHandle_t’
-   11 | RetVal sendMsgMaster(QueueHandle_t myQueueHandle, const void *data);
+   11 | RetVal_t sendMsgMaster(QueueHandle_t myQueueHandle, const void *data);
       |                      ^~~~~~~~~~~~~
 ./master/include/master_comm.h:18:24: error: expected declaration specifiers or ‘...’ before ‘QueueHandle_t’
-   18 | RetVal reciveMsgMaster(QueueHandle_t myQueueHandle, void *data);
+   18 | RetVal_t reciveMsgMaster(QueueHandle_t myQueueHandle, void *data);
       |                        ^~~~~~~~~~~~~
 In file included from master/src/master_state_machine.c:6:
 /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/semphr.h:33:6: error: #error "include FreeRTOS.h" must appear in source files before "include semphr.h"
@@ -760,16 +760,16 @@ master/src/master_state_machine.c:12:26: error: storage class specified for para
    12 | static SemaphoreHandle_t stateSemaphore_;
       |                          ^~~~~~~~~~~~~~~
 master/src/master_state_machine.c:15:18: error: storage class specified for parameter ‘StateHandler’
-   15 | typedef RetVal (*StateHandler)();
+   15 | typedef RetVal_t (*StateHandler)();
       |                  ^~~~~~~~~~~~
 master/src/master_state_machine.c:18:15: error: storage class specified for parameter ‘handleIdleState’
-   18 | static RetVal handleIdleState();
+   18 | static RetVal_t handleIdleState();
       |               ^~~~~~~~~~~~~~~
 master/src/master_state_machine.c:19:15: error: storage class specified for parameter ‘handleProcessState’
-   19 | static RetVal handleProcessState();
+   19 | static RetVal_t handleProcessState();
       |               ^~~~~~~~~~~~~~~~~~
 master/src/master_state_machine.c:20:15: error: storage class specified for parameter ‘handleErrorState’
-   20 | static RetVal handleErrorState();
+   20 | static RetVal_t handleErrorState();
       |               ^~~~~~~~~~~~~~~~
 master/src/master_state_machine.c:23:21: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘stateHandlers_’
    23 | static StateHandler stateHandlers_[MAX_STATE_MASTER] = {
@@ -778,31 +778,31 @@ master/src/master_state_machine.c:28:2: error: expected declaration specifiers b
    28 | };
       |  ^
 master/src/master_state_machine.c:34:33: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘{’ token
-   34 | static RetVal handleIdleState() {
+   34 | static RetVal_t handleIdleState() {
       |                                 ^
 master/src/master_state_machine.c:43:36: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘{’ token
-   43 | static RetVal handleProcessState() {
+   43 | static RetVal_t handleProcessState() {
       |                                    ^
 master/src/master_state_machine.c:52:34: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘{’ token
-   52 | static RetVal handleErrorState() {
+   52 | static RetVal_t handleErrorState() {
       |                                  ^
 master/src/master_state_machine.c:67:47: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘{’ token
-   67 | static RetVal setNewState(MasterStates state) {
+   67 | static RetVal_t setNewState(MasterStates state) {
       |                                               ^
 master/src/master_state_machine.c:89:35: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘{’ token
-   89 | RetVal initStateSemaphoreMaster() {
+   89 | RetVal_t initStateSemaphoreMaster() {
       |                                   ^
 master/src/master_state_machine.c:103:43: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘{’ token
-  103 | RetVal stateDispatcher(QueueMessage data) {
+  103 | RetVal_t stateDispatcher(QueueMessage data) {
       |                                           ^
 master/src/master_state_machine.c:129:32: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘{’ token
   129 | MasterStates getCurrentState() {
       |                                ^
 master/src/master_state_machine.c:134:35: error: expected declaration specifiers or ‘...’ before ‘QueueHandle_t’
-  134 | RetVal setStateQueueHandlerMaster(QueueHandle_t stateQueueHandle) {
+  134 | RetVal_t setStateQueueHandlerMaster(QueueHandle_t stateQueueHandle) {
       |                                   ^~~~~~~~~~~~~
 master/src/master_state_machine.c:145:35: error: expected declaration specifiers or ‘...’ before ‘QueueHandle_t’
-  145 | RetVal getStateQueueHandlerMaster(QueueHandle_t stateQueueHandle) {
+  145 | RetVal_t getStateQueueHandlerMaster(QueueHandle_t stateQueueHandle) {
       |                                   ^~~~~~~~~~~~~
 /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/list.h:433:6: error: old-style parameter declarations in prototyped function definition
   433 | void vListInitialise( List_t * const pxList ) PRIVILEGED_FUNCTION;
