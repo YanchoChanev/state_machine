@@ -1,0 +1,10 @@
+build/
+master/tests/test_master_handler/build/
+master/tests/test_master_comm/build/
+master/tests/test_master_status_check/build/
+slave/tests/test_slave_comm/build/
+slave/tests/test_slave_status_check/build/
+slave/tests/test_slave_handler/build/
+slave/tests/test_slave_reset_threads/build/
+slave_log.txt
+system_log.txt
