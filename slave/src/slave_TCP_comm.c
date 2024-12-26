@@ -173,7 +173,6 @@ static RetVal_t processClientMessage(const char* buffer) {
     }
      
     if(handelStatus(data) != RET_OK){
-        logMessage(LOG_LEVEL_ERROR, "TCPComm", "Failed to handle status");
         return RET_ERROR;
     }
     return RET_OK;

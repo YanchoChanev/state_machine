@@ -48,11 +48,9 @@ FreeRTOSMock* freeRTOSMock = nullptr;
 extern "C" {
     __attribute__((weak)) BaseType_t xQueueSend(QueueHandle_t queue, const void* item, TickType_t wait) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: xQueueSend called before freeRTOSMock was initialized.\n");
             abort();
         }
         if (queue == nullptr || item == nullptr) {
-            printf("Error: xQueueSend called with NULL arguments.\n");
             abort();
         }
         return freeRTOSMock->xQueueSend(queue, item, wait);
@@ -60,11 +58,9 @@ extern "C" {
 
     __attribute__((weak)) BaseType_t xQueueReceive(QueueHandle_t queue, void* item, TickType_t wait) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: xQueueReceive called before freeRTOSMock was initialized.\n");
             abort();
         }
         if (queue == nullptr || item == nullptr) {
-            printf("Error: xQueueReceive called with NULL arguments.\n");
             abort();
         }
         return freeRTOSMock->xQueueReceive(queue, item, wait);
@@ -72,7 +68,6 @@ extern "C" {
 
     __attribute__((weak)) BaseType_t xQueueGenericSend(QueueHandle_t queue, const void* item, TickType_t wait, BaseType_t copyPosition) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: xQueueGenericSend called before freeRTOSMock was initialized.\n");
             abort();
         }
         return freeRTOSMock->xQueueSend(queue, item, wait);
@@ -83,12 +78,9 @@ extern "C" {
     }
 
     __attribute__((weak)) void vQueueAddToRegistry(QueueHandle_t queue, const char* name) {
-        printf("vQueueAddToRegistry called: %s\n", name);
     }
 
     __attribute__((weak)) void vQueueWaitForMessageRestricted(QueueHandle_t xQueue, TickType_t xTicksToWait, BaseType_t xWaitIndefinitely) {
-        printf("vQueueWaitForMessageRestricted called: QueueHandle = %p, TicksToWait = %lu, WaitIndefinitely = %ld\n",
-               (void*)xQueue, (unsigned long)xTicksToWait, (long)xWaitIndefinitely);
     }
 
     __attribute__((weak)) BaseType_t xQueueGenericSendFromISR(QueueHandle_t queue, const void* item, BaseType_t* pxHigherPriorityTaskWoken, BaseType_t copyPosition) {
@@ -97,7 +89,6 @@ extern "C" {
 
     __attribute__((weak)) void vTaskDelay(TickType_t xTicksToDelay) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: vTaskDelay called before freeRTOSMock was initialized.\n");
             abort();
         }
         freeRTOSMock->vTaskDelay(xTicksToDelay);
@@ -105,7 +96,6 @@ extern "C" {
 
     void logMessage(LogLevel level, const char* module, const char* message) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: logMessage called before freeRTOSMock was initialized.\n");
             abort();
         }
         freeRTOSMock->logMessage(level, module, message);

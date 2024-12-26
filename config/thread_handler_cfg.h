@@ -46,6 +46,6 @@
 #define TASTK_TIME_MASTER_STATUS_CHECK_HANDLER       500 ///< Time interval for Master Status Check Handler.
 #define TASTK_TIME_SLAVE_STATUS_OBSERVATION_HANDLING 80  ///< Time interval for Slave Status Observation Handler.
 #define TASTK_TIME_SLAVE_RESTAT_STATUS               10  ///< Time interval for Slave Restart Status Handler.
-#define TASTK_TIME_ECHO_SERVER_HANDLER               80  ///< Time interval for Echo Server Handler.
+#define TASTK_TIME_ECHO_SERVER_HANDLER               10  ///< Time interval for Echo Server Handler.
 
 #endif // THREAD_HANDLER_CFG_H

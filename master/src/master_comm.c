@@ -30,7 +30,6 @@ static QueueHandle_t stateQueueHandle_ = NULL;
  */
 static BaseType_t queueSend(const void *data, TickType_t ticks_to_wait) {
     if (stateQueueHandle_ == NULL) {
-        printf("Queue handle is not initialized in queueSend\n");
         logMessage(LOG_LEVEL_ERROR, "MasterComm", "Queue handle is not initialized in queueSend");
         return pdFAIL;
     }

@@ -38,7 +38,7 @@ void vMasterCommHandler(void *args) {
 
         if(data != curentData){
             if (stateDispatcher(data) != RET_OK) {
-                logMessage(LOG_LEVEL_ERROR, "MasterHandler", "Failed to handle status");
+                logMessage(LOG_LEVEL_DEBUG, "MasterHandler", "Failed to handle status");
             }
         }
 

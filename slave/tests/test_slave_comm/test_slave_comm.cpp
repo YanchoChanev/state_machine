@@ -52,7 +52,6 @@ FreeRTOSMock* freeRTOSMock = nullptr;
 extern "C" {
     BaseType_t xQueueSend(QueueHandle_t queue, const void* item, TickType_t wait) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: xQueueSend called before freeRTOSMock was initialized.\n");
             abort();
         }
         return freeRTOSMock->xQueueSend(queue, item, wait);
@@ -60,7 +59,6 @@ extern "C" {
 
     BaseType_t xQueueGenericSend(QueueHandle_t queue, const void* item, TickType_t wait, BaseType_t copyPosition) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: xQueueGenericSend called before freeRTOSMock was initialized.\n");
             abort();
         }
         return freeRTOSMock->xQueueGenericSend(queue, item, wait, copyPosition);
@@ -68,7 +66,6 @@ extern "C" {
 
     BaseType_t xQueueReceive(QueueHandle_t queue, void* item, TickType_t wait) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: xQueueReceive called before freeRTOSMock was initialized.\n");
             abort();
         }
         return freeRTOSMock->xQueueReceive(queue, item, wait);
@@ -76,7 +73,6 @@ extern "C" {
 
     void vTaskDelay(TickType_t xTicksToDelay) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: vTaskDelay called before freeRTOSMock was initialized.\n");
             abort();
         }
         freeRTOSMock->vTaskDelay(xTicksToDelay);
@@ -84,7 +80,6 @@ extern "C" {
 
     void logMessage(LogLevel level, const char* module, const char* message) {
         if (freeRTOSMock == nullptr) {
-            printf("Error: logMessage called before freeRTOSMock was initialized.\n");
             abort();
         }
         freeRTOSMock->logMessage(level, module, message);
