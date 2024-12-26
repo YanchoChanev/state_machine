@@ -29,7 +29,9 @@ void vMasterCommHandler(void *args) {
     SlaveStates data = SLAVE_STATE_MAX;
     MasterStates curentData = MASTESR_STATE_MAX;
 
+#ifndef UNIT_TEST
     while(1){
+#endif
         if (reciveMsgMaster(&data) != RET_OK) {
             logMessage(LOG_LEVEL_ERROR, "MasterHandler", "Failed to receive message");
         }
@@ -41,7 +43,9 @@ void vMasterCommHandler(void *args) {
         }
 
         vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_COMM_HANDLER));
+#ifndef UNIT_TEST
     }
+#endif
 }
 
 /**
@@ -55,12 +59,16 @@ void vMasterCommHandler(void *args) {
 void vMasterStatusCheckHandler(void *args) {
     MasterStates currentState = MASTESR_STATE_MAX;
 
+#ifndef UNIT_TEST
     while(1){
+#endif
         (void)getCurrentState(&currentState);
 
         if (sendMsgMaster(&currentState) != RET_OK) {
             logMessage(LOG_LEVEL_ERROR, "MasterHandler", "Failed to send message");
         }
         vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_STATUS_CHECK_HANDLER));
+#ifndef UNIT_TEST
     }
+#endif
 }

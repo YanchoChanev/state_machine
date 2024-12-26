@@ -1,4 +1,4 @@
-build/./slave/src/TCP_comm.o: slave/src/TCP_comm.c \
+build/./slave/src/slave_TCP_comm.o: slave/src/slave_TCP_comm.c \
  logger/include/logger.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/FreeRTOS.h \
  include/FreeRTOSConfig.h \
@@ -12,5 +12,5 @@ build/./slave/src/TCP_comm.o: slave/src/TCP_comm.c \
  slave/include/slave_state_machine.h types/types.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/queue.h \
  /home/yancho/FreeRTOSv202212.01/FreeRTOS/Source/include/task.h \
- types/state_mashine_types.h types/types.h config/TCP_comm_cfg.h \
+ types/state_mashine_types.h types/types.h config/slave_TCP_comm_cfg.h \
  config/thread_handler_cfg.h

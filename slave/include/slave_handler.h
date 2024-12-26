@@ -5,6 +5,10 @@
 #include "task.h"
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file slave_handler.h
  * @brief Header file for managing slave handler tasks.
@@ -61,5 +65,9 @@ void vRestartHandler(void *args);
  * @param args Pointer to task arguments (can be used to pass parameters).
  */
 void vTCPEchoServerTask(void *args);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SLAVE_HANDLER_H

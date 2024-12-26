@@ -8,7 +8,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "slave_state_machine.h"
-#include "TCP_comm_cfg.h"
+#include "slave_TCP_comm_cfg.h"
 #include "thread_handler_cfg.h"
 
 
@@ -242,7 +242,7 @@ void tcpEchoServerTask() {
         vTaskDelete(NULL);
     }
     
-    for (;;) {
+    while(1) {
         if(acceptClientConnection(&client_fd, server_fd, &client_addr, &client_len) != RET_OK){
             continue;
         }

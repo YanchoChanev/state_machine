@@ -1,8 +1,12 @@
-#ifndef TCP_COMM_H
-#define TCP_COMM_H
+#ifndef SLAVE_TCP_COMM_H
+#define SLAVE_TCP_COMM_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
- * @file TCP_comm.h
+ * @file slave_TCP_comm.h
  * @brief Header file for the TCP communication module.
  *
  * This file contains the declaration for the TCP Echo Server Task,
@@ -21,4 +25,8 @@
  */
 void tcpEchoServerTask();
 
-#endif // TCP_COMM_H
+#ifdef __cplusplus
+}
+#endif
+
+#endif // SLAVE_TCP_COMM_H

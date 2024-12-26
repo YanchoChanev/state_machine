@@ -4,7 +4,7 @@
 #include "logger.h"
 #include "slave_comm.h"
 #include "slave_handler.h"
-#include "TCP_comm.h"
+#include "slave_TCP_comm.h"
 #include "slave_state_machine.h"
 #include "slave_restart_threads.h"
 #include "queue.h"
@@ -39,7 +39,9 @@ void vRestartHandler(void *args) {
     resetHandlerTask_ = (QueueHandle_t)args;
 
     if (resetHandlerTask_ != NULL) {
+#ifndef UNIT_TEST
         while (1) {
+#endif
             // Ensure the queue handle is valid
             configASSERT(resetHandlerTask_);
             
@@ -57,7 +59,9 @@ void vRestartHandler(void *args) {
             
             // Delay to prevent task starvation
             vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_SLAVE_RESTAT_STATUS));
+#ifndef UNIT_TEST
         }
+#endif
     } else {
         logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Reset handler is NULL");
     }
@@ -74,8 +78,10 @@ void vRestartHandler(void *args) {
 void vSlaveStatusObservationHandler(void *args) {
     MasterStates data = MASTESR_STATE_IDLE;
     SlaveStates sendData = SLAVE_STATE_MAX;
-    
+
+#ifndef UNIT_TEST
     while (1) {
+#endif
         // Receive a message from the STATE_CHANNEL
         if (reciveMsgSlave(&data) != RET_OK) {
             logMessage(LOG_LEVEL_ERROR, "SlaveHandler", "Failed to receive message");
@@ -98,7 +104,9 @@ void vSlaveStatusObservationHandler(void *args) {
         
         // Delay to prevent task starvation
         vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_SLAVE_STATUS_OBSERVATION_HANDLING));
+#ifndef UNIT_TEST
     }
+#endif
 }
 
 /**

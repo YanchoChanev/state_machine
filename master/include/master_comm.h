@@ -1,9 +1,15 @@
 #ifndef SLAVE_COMM_H
 #define SLAVE_COMM_H
 
+
+
 #include "types.h"
 #include "FreeRTOS.h"
 #include "queue.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @file slave_comm.h
@@ -42,5 +48,9 @@ RetVal_t sendMsgMaster(const void *data);
  * @return RET_OK if a message was successfully received, RET_ERROR otherwise.
  */
 RetVal_t reciveMsgMaster(void *data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SLAVE_COMM_H

@@ -4,7 +4,24 @@
 #include "types.h"
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "semphr.h"
+
 #include "state_mashine_types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief Structure for handling the master's state and synchronization.
+ *
+ * - currentState: Tracks the current state.
+ * - stateSemaphore: Mutex for ensuring thread-safe state transitions.
+ */
+typedef struct {
+    MasterStates currentState; ///< Current state of the master system.
+    SemaphoreHandle_t stateSemaphore; ///< Semaphore for state synchronization.
+} MasterStatesConditionHandler;
 
 /**
  * @file master_state_machine.h
@@ -45,5 +62,9 @@ RetVal_t stateDispatcher(SlaveStates data);
  * @return RET_OK if the current state was successfully retrieved, RET_ERROR otherwise.
  */
 RetVal_t getCurrentState(MasterStates* currentState);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // MASTER_STATE_MACHINE_H

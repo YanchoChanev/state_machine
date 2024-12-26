@@ -4,6 +4,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "types.h"
+#include "queue.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @file slave_restart_threads.h
@@ -67,5 +72,9 @@ void setTaskHandlers(TaskHandle_t *taskHandlers);
  * @return RET_OK if initialization succeeded, RET_ERROR otherwise.
  */
 RetVal_t initResetHandler(QueueHandle_t resetQueueHandler);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SLAVE_RESTART_THREADS_H

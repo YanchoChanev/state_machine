@@ -7,6 +7,10 @@
 
 #include "state_mashine_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file slave_state_machine.h
  * @brief Header file for the Slave State Machine module.
@@ -36,7 +40,7 @@ RetVal_t initStateMachineSlave(QueueHandle_t resetHandler);
  * @param state The new state to transition to.
  * @return RET_OK if the state change was successful, RET_ERROR otherwise.
  */
-RetVal_t handelStatus(SlaveStates state);
+RetVal_t handelStatus(SlaveInputStates state);
 
 /**
  * @brief Retrieves the current state of the slave.
@@ -48,5 +52,9 @@ RetVal_t handelStatus(SlaveStates state);
  * @return RET_OK if the current state was successfully retrieved, RET_ERROR otherwise.
  */
 RetVal_t getState(SlaveStates* currentStatus);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SLAVE_STATE_MACHINE_H

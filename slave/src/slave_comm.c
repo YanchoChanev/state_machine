@@ -34,6 +34,8 @@ static QueueHandle_t stateQueueHandler_ = NULL;
  */
 static BaseType_t queueSend(const void *data, TickType_t ticks_to_wait) {
     if (stateQueueHandler_ == NULL) {
+        printf("-------------------------------->Queue handle is not initialized in queueSend (STATE_CHANNEL)\n");
+        printf("stateQueueHandler_: %p\n", stateQueueHandler_);
         logMessage(LOG_LEVEL_ERROR, "SlaveComm", "Queue handle is not initialized in queueSend (STATE_CHANNEL)");
         return pdFAIL;
     }
@@ -68,12 +70,14 @@ static BaseType_t queueReceive(void *data, TickType_t ticks_to_wait) {
  * @return RET_OK if initialization succeeded, RET_ERROR otherwise.
  */
 RetVal_t initSlaveComm(QueueHandle_t stateQueueHandler) {
-    stateQueueHandler_ = stateQueueHandler;
-    
-    if (stateQueueHandler_ == NULL) {
+    printf("stateQueueHandler: %p\n", stateQueueHandler);
+    if (stateQueueHandler == NULL) {
         logMessage(LOG_LEVEL_ERROR, "SlaveComm", "Failed to initialize state queue handler");
         return RET_ERROR;
     }
+
+     stateQueueHandler_ = stateQueueHandler;
+
     return RET_OK;
 }
 
@@ -89,6 +93,7 @@ RetVal_t initSlaveComm(QueueHandle_t stateQueueHandler) {
  */
 RetVal_t sendMsgSlave(const void *data) {
     if (queueSend(data, pdMS_TO_TICKS(TICK_TO_WAIT_SEND_MS)) != pdPASS) {
+        printf("Failed to send message to the queue\n");
         logMessage(LOG_LEVEL_ERROR, "SlaveComm", "Failed to send message to the queue");
         return RET_ERROR;
     } else {

@@ -1,6 +1,10 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     LOG_LEVEL_DEBUG,
     LOG_LEVEL_INFO,
@@ -36,5 +40,9 @@ void logMessageFormatted(LogLevel level, const char *component, const char *form
  * @param level The log level to filter messages.
  */
 void printLogMessages(LogLevel level);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LOGGER_H

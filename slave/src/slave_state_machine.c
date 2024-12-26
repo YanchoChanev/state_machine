@@ -27,7 +27,7 @@
  * This mapping ensures proper state transitions between slave and master systems.
  */
 typedef struct {
-    MasterStates masterState; ///< Corresponding state in the master system.
+    SlaveInputStates masterState; ///< Corresponding state in the master system.
     SlaveStates slaveState; ///< State of the slave system.
 } MasterToSlaveMap;
 
@@ -195,12 +195,15 @@ RetVal_t initStateMachineSlave(QueueHandle_t resetHandler) {
  * @param state State to handle.
  * @return RET_OK if state was successfully handled, RET_ERROR otherwise.
  */
-RetVal_t handelStatus(SlaveStates state) {
-    if (state >= SLAVE_MAX_STATE_SLAVE) {
+RetVal_t handelStatus(SlaveInputStates state) {
+    if (state >= SLAVE_INPUT_STATE_MAX) {
         logMessage(LOG_LEVEL_ERROR, "SlaveStateMachine", "Invalid state");
         return RET_ERROR;
     }
-    return slaveFSM[state].handler();
+
+    SlaveStates newState = masterToSlaveMap[state].slaveState;
+
+    return slaveFSM[newState].handler();
 }
 
 /**

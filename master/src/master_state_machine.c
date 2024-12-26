@@ -3,7 +3,6 @@
 #include "master_comm.h"
 #include "types.h"
 #include "logger.h"
-#include "semphr.h"
 
 /**
  * @file master_state_machine.c
@@ -32,18 +31,11 @@ SlaveToMasterMap slaveToMasterMap[] = {
     {SLAVE_STATE_FAULT,  MASTESR_STATE_ERROR},
 };
 
-/**
- * @brief Structure for handling the master's state and synchronization.
- *
- * - currentState: Tracks the current state.
- * - stateSemaphore: Mutex for ensuring thread-safe state transitions.
- */
-typedef struct {
-    MasterStates currentState; ///< Current state of the master system.
-    SemaphoreHandle_t stateSemaphore; ///< Semaphore for state synchronization.
-} MasterStatesConditionHandler;
-
+#ifdef UNIT_TEST
+MasterStatesConditionHandler masterStateMachineCondition = {MASTESR_STATE_IDLE, NULL};
+#else
 static MasterStatesConditionHandler masterStateMachineCondition = {MASTESR_STATE_IDLE, NULL};
+#endif
 
 // Forward declarations for state handler functions
 static RetVal_t handleIdleState();
@@ -77,13 +69,17 @@ MasterStateMachine masterFSM[] = {
  */
 static RetVal_t setNewState(MasterStates state) {
     RetVal_t ret = RET_OK;
+    printf("Setting new state\n");
     if (xSemaphoreTake(masterStateMachineCondition.stateSemaphore, (TickType_t)SEMAPHOR_TICKS) == pdTRUE) {
+        printf("-------------------_> State: %d\n", state);
         if (state >= MASTESR_STATE_MAX) {
             logMessage(LOG_LEVEL_ERROR, "MasterStateMachine", "Invalid state");
             ret = RET_ERROR;
         } else {
+            printf("-------------------_> State: %d\n", state);
             if (masterStateMachineCondition.currentState != state) {
                 masterStateMachineCondition.currentState = state;
+                printf("New state: %d\n", masterStateMachineCondition.currentState);
                 logMessageFormatted(LOG_LEVEL_INFO, "MasterStateMachine", "New status is %d", 
                                     masterStateMachineCondition.currentState);
             }
@@ -117,6 +113,7 @@ static RetVal_t handleIdleState() {
  * @return RET_OK on success.
  */
 static RetVal_t handleProcessState() {
+    printf("Processing\n");
     setNewState(MASTESR_STATE_PROCESSING);
     logMessage(LOG_LEVEL_INFO, "MasterStateMachine", "Master: Handling process state");
     return RET_OK;
@@ -164,14 +161,17 @@ RetVal_t initStateSemaphoreMaster() {
  * @return RET_OK on success, RET_ERROR otherwise.
  */
 RetVal_t stateDispatcher(SlaveStates data) {
-    RetVal_t ret = RET_OK;
-    MasterStates state = slaveToMasterMap[data].masterState;
-    if (state >= MASTESR_STATE_MAX) {
-        ret = RET_ERROR;
+    RetVal_t ret = RET_ERROR;
+    if (data >= SLAVE_STATE_MAX) {
+        printf("................................>Invalid state\n");
+        return RET_ERROR;
     }
+    printf("It is not returning\n");
     logMessageFormatted(LOG_LEVEL_DEBUG, "MasterStateMachine", "Dispatching state %d", data);
 
+    MasterStates state = slaveToMasterMap[data].masterState;
     if(state != masterStateMachineCondition.currentState){
+        printf("State: %d\n", state);
         ret = masterFSM[state].handler();
     }
 
@@ -186,5 +186,6 @@ RetVal_t stateDispatcher(SlaveStates data) {
  */
 RetVal_t getCurrentState(MasterStates* currentState) {
     *currentState = masterStateMachineCondition.currentState;
+    printf("Current state: %d\n", *currentState);
     return RET_OK;
 }

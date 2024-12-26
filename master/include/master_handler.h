@@ -4,6 +4,10 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file master_handler.h
  * @brief Header file for Master Handler tasks.
@@ -32,5 +36,9 @@ void vMasterCommHandler(void *args);
  * @param args Pointer to task arguments (if any).
  */
 void vMasterStatusCheckHandler(void *args);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // MASTER_HANDLER_H

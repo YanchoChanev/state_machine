@@ -3,6 +3,10 @@
 
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file state_machine_types.h
  * @brief State definitions for Master and Slave systems.
@@ -48,5 +52,9 @@ typedef enum {
     SLAVE_INPUT_STATE_ERROR_OR_RESET,   ///< Error or Reset state.
     SLAVE_INPUT_STATE_MAX               ///< Maximum input state value.
 } SlaveInputStates;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // STATE_MACHINE_TYPES_H

@@ -1,7 +1,7 @@
 #include "FreeRTOS.h"
-#include "queue.h"
 #include "slave_restart_threads.h"
 #include "slave_handler.h"
+#include "slave_state_machine.h"
 #include "logger.h"
 #include "thread_handler_cfg.h"
 #include "state_mashine_types.h"
