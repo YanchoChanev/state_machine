@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include <cstdarg>
 
 // Include the header file under test
 extern "C" {

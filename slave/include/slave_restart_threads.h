@@ -44,16 +44,6 @@ typedef struct {
 RetVal_t restartAllTasks();
 
 /**
- * @brief Retrieve the restart queue handle.
- *
- * Provides access to the restart queue used for signaling task restarts.
- *
- * @param restartQueueHandle Pointer to store the queue handle.
- * @return RET_OK if the queue handle was successfully retrieved, RET_ERROR otherwise.
- */
-RetVal_t getRestartQueue(QueueHandle_t restartQueueHandle);
-
-/**
  * @brief Set the task handlers for task management.
  *
  * Registers an array of task handlers that will be used for managing and controlling tasks

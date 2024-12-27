@@ -1,62 +1,46 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include <cstdarg>
 
-// ==========================
-// **Include Dependencies**
-// ==========================
+// Include dependencies
 extern "C" {
-    #include "slave_handler.h"  // Include the header file for the module under test
-    #include "logger.h"        // Include necessary header files for dependencies
-    #include "queue.h"
-    #include "slave_comm.h"
-    #include "slave_state_machine.h"
-    #include "slave_restart_threads.h"
-    #include "slave_TCP_comm.h"
+    #include "state_mashine_types.h"
     #include "FreeRTOS.h"
-    #include "task.h"
-    #include "types.h"
+    #include "slave_restart_threads.h"
+    #include "slave_handler.h"
+    #include "slave_state_machine.h"
+    #include "logger.h"
+    #include "thread_handler_cfg.h"
     #include "state_mashine_types.h"
 }
 
 // ==========================
 // **Mock Classes for Dependencies**
 // ==========================
-// Use clear and concise names for mock classes
-class MockQueue {
-public:
-    MOCK_METHOD(BaseType_t, xQueueReceive, (QueueHandle_t queue, void *pvBuffer, TickType_t xTicksToWait), ());
-};
-
 class MockLogger {
 public:
-    MOCK_METHOD(void, logMessage, (LogLevel priority, const char* module, const char* message), ());
-};
-
-class MockSlaveComm {
-public:
-    MOCK_METHOD(RetVal_t, reciveMsgSlave, (void*), ());
-    MOCK_METHOD(RetVal_t, sendMsgSlave, (const void*), ());
+    MOCK_METHOD(void, logMessage, (LogLevel level, const char* tag, const char* message), ());
+    MOCK_METHOD(void, logMessageFormattedHelper, (LogLevel level, const char* component, const char* format), ());
+    void logMessageFormatted(LogLevel level, const char* component, const char* format, ...) {
+        va_list args;
+        va_start(args, format);
+        char buffer[256];
+        vsnprintf(buffer, sizeof(buffer), format, args);
+        va_end(args);
+        logMessageFormattedHelper(level, component, buffer);
+    }
 };
 
 class MockFreeRTOS {
 public:
-    MOCK_METHOD(void, vTaskDelay, (TickType_t xTicksToDelay), ());
+    MOCK_METHOD(void, vTaskDelete, (TaskHandle_t xTaskToDelete), ());
+    MOCK_METHOD(BaseType_t, xTaskCreate, (TaskFunction_t pxTaskCode, const char* const pcName, uint32_t usStackDepth,
+                                         void* const pvParameters, UBaseType_t uxPriority, TaskHandle_t* const pxCreatedTask), ());
 };
 
 class MockStateMachine {
 public:
-    MOCK_METHOD(RetVal_t, getState, (SlaveStates*), ());
-    MOCK_METHOD(RetVal_t, handelStatus, (SlaveInputStates), ());
-};
-
-class MockTCPComm {
-public:
-    MOCK_METHOD(void, tcpEchoServerTask, (), ());
-};
-
-class MockRestart {
-public:
-    MOCK_METHOD(RetVal_t, restartAllTasks, (), ());
+    MOCK_METHOD(RetVal_t, handelStatus, (SlaveInputStates state), ());
 };
 
 using ::testing::_;
@@ -65,130 +49,115 @@ using ::testing::Return;
 // ==========================
 // **Global Mock Objects**
 // ==========================
-// Create global mock objects for easy access in tests
-MockQueue* mockQueue;
 MockLogger* mockLogger;
-MockSlaveComm* mockSlaveComm;
-MockStateMachine* mockStateMachine;
-MockTCPComm* mockTCPComm;
 MockFreeRTOS* mockFreeRTOS;
-MockRestart* mockRestart;
+MockStateMachine* mockStateMachine;
+static TaskHandler taskHandlers_[SLAVE_TAKS_HANDLERS_SIZE] = {
+    {SLAVE_STATUS_OBSERVATION_HANDLER_ID, vSlaveStatusObservationHandler, "SlaveStatusObservationHandler", 
+    TASTK_PRIO_SLAVE_STATUS_OBSERVATION_HANDLING, NULL},
+    {TCP_ECHO_SERVER_TASK, vTCPEchoServerTask, "TCPEchoServerTask", TASTK_PRIO_ECHO_SERVER_HANDLER, NULL},
+};
 
 // ==========================
 // **Mocked C Functions**
 // ==========================
-// Redirect C functions to their corresponding mock objects
 extern "C" {
-    void logMessage(LogLevel priority, const char* thread, const char* message) {
-        mockLogger->logMessage(priority, thread, message);
+    void logMessage(LogLevel priority, const char* module, const char* message) {
+        mockLogger->logMessage(priority, module, message);
     }
 
-    void vTaskDelay(TickType_t xTicksToDelay) {
-        mockFreeRTOS->vTaskDelay(xTicksToDelay);
+    void logMessageFormatted(LogLevel level, const char* component, const char* format, ...) {
+        va_list args;
+        va_start(args, format);
+        char buffer[256];
+        vsnprintf(buffer, sizeof(buffer), format, args);
+        va_end(args);
+        mockLogger->logMessageFormattedHelper(level, component, buffer);
     }
 
-    RetVal_t restartAllTasks() {
-        return mockRestart->restartAllTasks();
+    void vTaskDelete(TaskHandle_t xTaskToDelete) {
+        mockFreeRTOS->vTaskDelete(xTaskToDelete);
     }
 
-    BaseType_t xQueueReceive(QueueHandle_t queue, void *pvBuffer, TickType_t xTicksToWait) {
-        return mockQueue->xQueueReceive(queue, pvBuffer, xTicksToWait);
-    }
-
-    RetVal_t reciveMsgSlave(void* data) {
-        return mockSlaveComm->reciveMsgSlave(data);
-    }
-
-    RetVal_t getState(SlaveStates* state) {
-        return mockStateMachine->getState(state);
-    }
-
-    RetVal_t sendMsgSlave(const void* state) {
-        return mockSlaveComm->sendMsgSlave(state);
+    BaseType_t xTaskCreate(TaskFunction_t pxTaskCode, const char* const pcName, uint32_t usStackDepth,
+                           void* const pvParameters, UBaseType_t uxPriority, TaskHandle_t* const pxCreatedTask) {
+        return mockFreeRTOS->xTaskCreate(pxTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pxCreatedTask);
     }
 
     RetVal_t handelStatus(SlaveInputStates state) {
         return mockStateMachine->handelStatus(state);
     }
 
-    void tcpEchoServerTask() {
-        mockTCPComm->tcpEchoServerTask();
+    // Mock implementations of undefined functions
+    void vSlaveStatusObservationHandler(void* params) {
+        // Mock implementation
+    }
+
+    void vTCPEchoServerTask(void* params) {
+        // Mock implementation
     }
 }
 
 // ==========================
 // **Test Fixture**
 // ==========================
-// Create a test fixture for consistent setup and teardown
-class SlaveHandlerTest : public ::testing::Test {
+class SlaveRestartThreadsTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        mockQueue = new MockQueue();
         mockLogger = new MockLogger();
-        mockSlaveComm = new MockSlaveComm();
-        mockStateMachine = new MockStateMachine();
-        mockTCPComm = new MockTCPComm();
         mockFreeRTOS = new MockFreeRTOS();
-        mockRestart = new MockRestart();
+        mockStateMachine = new MockStateMachine();
     }
 
     void TearDown() override {
-        delete mockQueue;
         delete mockLogger;
-        delete mockSlaveComm;
-        delete mockStateMachine;
-        delete mockTCPComm;
         delete mockFreeRTOS;
-        delete mockRestart;
+        delete mockStateMachine;
     }
 };
 
 // ==========================
-// **1. Restart Handler Tests**
+// **Tests for restartAllTasks**
 // ==========================
-// Test successful restart of tasks
-TEST_F(SlaveHandlerTest, RestartHandler_ReceivesSignalAndRestartsTasks) {
-    uint8_t signal = 1;
-    QueueHandle_t testQueue = (QueueHandle_t)1;
 
-    EXPECT_CALL(*mockLogger, logMessage(LOG_LEVEL_DEBUG, _, _)).Times(1);
-    EXPECT_CALL(*mockQueue, xQueueReceive(testQueue, _, _))
-        .WillOnce([](QueueHandle_t, void* pvBuffer, TickType_t) {
-            *(uint8_t*)pvBuffer = 1;
-            return pdPASS;
-        });
-    EXPECT_CALL(*mockFreeRTOS, vTaskDelay(_)).Times(2);
-    EXPECT_CALL(*mockRestart, restartAllTasks()).WillOnce(Return(RET_OK));
+// Test successful restart of all tasks
+TEST_F(SlaveRestartThreadsTest, RestartAllTasks_Success) {
+    EXPECT_CALL(*mockLogger, logMessage(LOG_LEVEL_INFO, _, _)).Times(1);
+    EXPECT_CALL(*mockFreeRTOS, xTaskCreate(_, _, _, _, _, _)).WillRepeatedly(Return(pdPASS));
+    EXPECT_CALL(*mockStateMachine, handelStatus(SLAVE_INPUT_STATE_IDEL_OR_SLEEP)).WillOnce(Return(RET_OK));
 
-    vRestartHandler((void*)testQueue);
+    RetVal_t result = restartAllTasks();
+
+    EXPECT_EQ(result, RET_OK);
 }
 
-// **2. Status Observation Handler Tests**
-// Test handling valid slave state
-TEST_F(SlaveHandlerTest, SlaveStatusObservationHandler_ReceivesStateAndHandlesStatus) {
-    EXPECT_CALL(*mockSlaveComm, reciveMsgSlave(_)).WillOnce(Return(RET_OK));
-    EXPECT_CALL(*mockStateMachine, getState(_))
-        .WillOnce([](SlaveStates* state) {
-            *state = SLAVE_STATE_ACTIVE;
-            return RET_OK;
-        });
-    EXPECT_CALL(*mockSlaveComm, sendMsgSlave(_)).WillOnce(Return(RET_OK));
+// Test failure in recreating tasks during restart
+TEST_F(SlaveRestartThreadsTest, RestartAllTasks_RecreateFailure) {
+    EXPECT_CALL(*mockLogger, logMessage(LOG_LEVEL_INFO, _, _)).Times(1);
+    EXPECT_CALL(*mockFreeRTOS, xTaskCreate(_, _, _, _, _, _)).WillOnce(Return(pdFAIL));
+    EXPECT_CALL(*mockLogger, logMessage(LOG_LEVEL_ERROR, _, _)).Times(1);
 
-    vSlaveStatusObservationHandler(nullptr);
+    RetVal_t result = restartAllTasks();
+
+    EXPECT_EQ(result, RET_ERROR);
 }
 
-// **3. TCP Echo Server Task Tests**
-// Ensure TCP server task starts
-TEST_F(SlaveHandlerTest, TCPEchoServerTask_LogsStartAndCallsTCPServer) {
-    EXPECT_CALL(*mockTCPComm, tcpEchoServerTask()).Times(1);
-    vTCPEchoServerTask(nullptr);
+// Test failure in setting state during restart
+TEST_F(SlaveRestartThreadsTest, RestartAllTasks_SetStateFailure) {
+    EXPECT_CALL(*mockLogger, logMessage(LOG_LEVEL_INFO, _, _)).Times(1);
+    EXPECT_CALL(*mockFreeRTOS, xTaskCreate(_, _, _, _, _, _)).WillRepeatedly(Return(pdPASS));
+    EXPECT_CALL(*mockStateMachine, handelStatus(SLAVE_INPUT_STATE_IDEL_OR_SLEEP)).WillOnce(Return(RET_ERROR));
+    EXPECT_CALL(*mockLogger, logMessage(LOG_LEVEL_ERROR, _, _)).Times(1);
+
+    RetVal_t result = restartAllTasks();
+
+    EXPECT_EQ(result, RET_ERROR);
 }
 
 // ==========================
 // **Main Test Runner**
 // ==========================
-// Entry point for the test runner
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

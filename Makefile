@@ -55,6 +55,47 @@ ${BUILD_DIR}/%.o : %.c
 	$(CC) $(CFLAGS) ${INCLUDE_DIRS} -MMD -c $< -o $@
 
 .PHONY: clean
-
 clean:
 	-rm -rf $(BUILD_DIR)
+
+# Setup command
+.PHONY: setup
+setup:
+	@echo "Running FreeRTOS setup script..."
+	./freertos_setup.sh
+
+# Test perform command
+.PHONY: run_master_comm_test
+run_master_comm_test:
+	@echo "Running master communication test..."
+	./test_scripts/run_master_comm_test.sh
+
+.PHONY: run_master_handler_test
+run_master_handler_test:
+	@echo "Running master handler test..."
+	./test_scripts/run_master_handler_test.sh
+
+.PHONY: run_master_state_mashine_test
+run_master_state_mashine_test:
+	@echo "Running master state machine test..."
+	./test_scripts/run_master_state_mashine_test.sh
+
+.PHONY: run_slave_comm_test
+run_slave_comm_test:
+	@echo "Running slave communication test..."
+	./test_scripts/run_slave_comm_test.sh
+
+.PHONY: run_slave_handler_test
+run_slave_handler_test:
+	@echo "Running slave handler test..."
+	./test_scripts/run_slave_handler_test.sh
+
+.PHONY: run_slave_restart_threads_test
+run_slave_restart_threads_test:
+	@echo "Running slave restart threads test..."
+	./test_scripts/run_slave_restart_threads_test.sh
+
+.PHONY: run_slave_state_machine_test
+run_slave_state_machine_test:
+	@echo "Running slave state machine test..."
+	./test_scripts/run_slave_state_machine_test.sh
