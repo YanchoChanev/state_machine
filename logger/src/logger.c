@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define LOG_FILE "slave_log.txt"
+#define LOG_FILE "system_log.txt"
 #define PRIORITY_LEVEL LOG_LEVEL_INFO
 
 // Global variable to store the minimum log level

@@ -21,6 +21,20 @@
  * It handles incoming client connections, processes messages, and supports state transitions.
  */
 
+#define MAX_RETRIES 5
+#define RETRY_DELAY_MS 2000
+#define VERIFICATION_FLAG "CONNECTED\n"
+
+/**
+ * @brief Close and reset socket file descriptor.
+ */
+static void cleanupSocket(int32_t* socket_fd) {
+    if (*socket_fd >= 0) {
+        close(*socket_fd);
+        *socket_fd = -1;
+    }
+}
+
 /**
  * @brief Create a TCP socket.
  *
@@ -31,14 +45,17 @@
  * @return RET_OK on success, RET_ERROR on failure.
  */
 static RetVal_t createSocket(int32_t* server_fd, int16_t port){
-    *server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (*server_fd < 0) {
-        logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Socket creation failed for port %d, with error: %s", 
-                            port, strerror(errno));
-        perror("Socket failed");
-        return RET_ERROR;
+
+    for (int i = 0; i < MAX_RETRIES; i++) {
+        *server_fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (*server_fd >= 0) {
+            return RET_OK;
+        }
+        logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Socket creation failed: %s (Attempt %d/%d)",
+                            strerror(errno), i + 1, MAX_RETRIES);
+        vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
     }
-    return RET_OK;
+    return RET_ERROR;
 }
 
 /**
@@ -100,15 +117,14 @@ static void configureServerAddress(struct sockaddr_in* server_addr,
  * @return RET_OK on success, RET_ERROR on failure.
  */
 static RetVal_t bindSocket(int32_t server_fd, struct sockaddr* server_addr, int32_t size, int16_t port){
-    // Bind socket
-    if (bind(server_fd, server_addr, size) < 0) {
-        perror("Bind failed");
-        logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Bind failed for port: %d, with error: %s", 
-                            port, strerror(errno));
-        close(server_fd);
-        return RET_ERROR;
+    for (int i = 0; i < MAX_RETRIES; i++) {
+        if (bind(server_fd, server_addr, size) == 0) {
+            return RET_OK;
+        }
+        logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Bind failed: %s (Attempt %d/%d)", strerror(errno), i + 1, MAX_RETRIES);
+        vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
     }
-    return RET_OK;
+    return RET_ERROR;
 }
 
 /**
@@ -121,14 +137,14 @@ static RetVal_t bindSocket(int32_t server_fd, struct sockaddr* server_addr, int3
  * @return RET_OK on success, RET_ERROR on failure.
  */
 static RetVal_t startListening(int32_t server_fd, int16_t port){
-    // Start listening
-    if (listen(server_fd, CONNECTION_REQUESTS) < 0) {
-        logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Listen failed for port: %d, with error: %s", 
-                            PORT, strerror(errno));
-        close(server_fd);
-        return RET_ERROR;
+    for (int i = 0; i < MAX_RETRIES; i++) {
+        if (listen(server_fd, CONNECTION_REQUESTS) == 0) {
+            return RET_OK;
+        }
+        logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Listen failed: %s (Attempt %d/%d)", strerror(errno), i + 1, MAX_RETRIES);
+        vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
     }
-    return RET_OK;
+    return RET_ERROR;
 }
 
 /**
@@ -149,6 +165,16 @@ static RetVal_t acceptClientConnection(int32_t* client_fd, int32_t server_fd, st
         return RET_ERROR;
     } else {
         logMessage(LOG_LEVEL_INFO, "TCPComm", "Client connected!");
+
+        // Send verification flag to the client
+        ssize_t sent_bytes = send(*client_fd, VERIFICATION_FLAG, strlen(VERIFICATION_FLAG), 0);
+        if (sent_bytes < 0) {
+            logMessageFormatted(LOG_LEVEL_ERROR, "TCPComm", "Failed to send verification flag: %s", strerror(errno));
+            close(*client_fd); // Close client socket on failure
+            return RET_ERROR;
+        } else {
+            logMessage(LOG_LEVEL_INFO, "TCPComm", "Verification flag sent to client!");
+        }
     }
     return RET_OK;
 }
@@ -223,31 +249,42 @@ void tcpEchoServerTask() {
     char buffer[TCP_BUFFER_SIZE] = {0};
     int opt = OPT_VALUE;
 
-    if(createSocket(&server_fd, PORT) != RET_OK){
-        vTaskDelete(NULL);
-    }
+    while(1){
 
-    if(reuseTheAddress(server_fd, &opt, PORT) != RET_OK){
-        vTaskDelete(NULL);
-    }
-
-    configureServerAddress(&server_addr, AF_INET, INADDR_ANY, PORT);
-
-    if(bindSocket(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr), PORT) != RET_OK){
-        vTaskDelete(NULL);
-    }
-
-    if(startListening(server_fd, PORT) != RET_OK){
-        vTaskDelete(NULL);
-    }
-    
-    while(1) {
-        if(acceptClientConnection(&client_fd, server_fd, &client_addr, &client_len) != RET_OK){
+        if(createSocket(&server_fd, PORT) != RET_OK){
+            logMessage(LOG_LEVEL_ERROR, "TCPComm", "Failed to create socket after retries. Restarting...");
+            vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
             continue;
         }
-        handleClientCommunication(client_fd, buffer);
-    }
 
-    close(server_fd);
-    vTaskDelete(NULL);
+        if(reuseTheAddress(server_fd, &opt, PORT) != RET_OK){
+            cleanupSocket(&server_fd);
+            vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
+            continue;
+        }
+
+        configureServerAddress(&server_addr, AF_INET, INADDR_ANY, PORT);
+
+        if(bindSocket(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr), PORT) != RET_OK){
+            cleanupSocket(&server_fd);
+            vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
+            continue;
+        }
+
+        if(startListening(server_fd, PORT) != RET_OK){
+            cleanupSocket(&server_fd);
+            vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
+            continue;
+        }
+        
+        while(1) {
+            if(acceptClientConnection(&client_fd, server_fd, &client_addr, &client_len) != RET_OK){
+                continue;
+            }
+            handleClientCommunication(client_fd, buffer);
+        }
+
+        close(server_fd);
+        vTaskDelete(NULL);
+    }
 }
