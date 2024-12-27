@@ -99,9 +99,6 @@ Logs provide insights into system behavior and help in debugging and performance
 
 ## Future Improvements
 ### TCP Communication for Simulation Messages
-- Implement TCP communication to receive simulation messages from external systems.
-- Develop a TCP server module to handle incoming simulation messages efficiently.
-- Ensure message parsing and validation are robust to prevent malformed data handling.
 - Add unit tests and performance benchmarks for the TCP communication module.
 - **Known Issue:** After multiple thread resets, communication starts experiencing connection problems between the simulation and the server implemented in this system.
 
