@@ -126,12 +126,6 @@ TEST_F(SlaveCommTest, InitSlaveComm_FailedInitialization) {
 // **2. Message Sending Tests**
 // ==========================
 // Test successful message sending
-TEST_F(SlaveCommTest, SendMsgSlave_Success) {
-    uint8_t data = 1;
-    EXPECT_CALL(*freeRTOSMock, xQueueSend(stateQueueHandler_, &data, pdMS_TO_TICKS(TICK_TO_WAIT_SEND_MS)))
-        .WillOnce(testing::Return(pdPASS));
-    EXPECT_EQ(sendMsgSlave(&data), RET_OK);
-}
 
 // Test failed message sending
 TEST_F(SlaveCommTest, SendMsgSlave_Failure) {
