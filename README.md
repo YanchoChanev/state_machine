@@ -80,6 +80,21 @@ This command will execute the built binary and start the application.
 
 Consistent naming improves code readability and collaboration.
 
+## Unit Tests
+Unit tests are implemented using custom test scripts located in the `test_scripts/` directory.
+
+### Running Unit Tests
+To run specific unit tests:
+```bash
+make run_master_comm_test
+make run_master_handler_test
+make run_master_state_mashine_test
+make run_slave_comm_test
+make run_slave_handler_test
+make run_slave_restart_threads_test
+make run_slave_state_machine_test
+```
+
 ## Architecture
 The detailed architecture diagram and explanation can be found [here](https://docs.google.com/document/d/15yoyWX8DCxcP7g0IB26MCoQuK6t1syV5jzvsIHMFAbM/edit?tab=t.0).
 
