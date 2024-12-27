@@ -25,7 +25,7 @@ extern "C" {
  *
  * @param args Pointer to task arguments (if any).
  */
-void vMasterCommHandler(void *args);
+void vMasterReciverHandler(void *args);
 
 /**
  * @brief Handles master status check tasks.
@@ -35,7 +35,7 @@ void vMasterCommHandler(void *args);
  *
  * @param args Pointer to task arguments (if any).
  */
-void vMasterStatusCheckHandler(void *args);
+void vMasterSenderHandler(void *args);
 
 #ifdef __cplusplus
 }

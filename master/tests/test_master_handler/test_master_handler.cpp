@@ -109,62 +109,62 @@ protected:
 };
 
 // ==========================
-// Unit Tests for vMasterCommHandler
+// Unit Tests for vMasterReciverHandler
 // ==========================
 // Test case when message receiving fails
-TEST_F(MasterHandlerTest, vMasterCommHandler_ReceiveMessageFails) {
+TEST_F(MasterHandlerTest, vMasterReciverHandler_ReceiveMessageFails) {
     EXPECT_CALL(*mockMasterComm, reciveMsgMaster(testing::_))
         .WillOnce(testing::Return(RET_ERROR));
     EXPECT_CALL(*mockTask, vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_COMM_HANDLER)));
 
-    vMasterCommHandler(nullptr);
+    vMasterReciverHandler(nullptr);
 }
 
 // Test case when state dispatcher fails
-TEST_F(MasterHandlerTest, vMasterCommHandler_StateDispatcherFails) {
+TEST_F(MasterHandlerTest, vMasterReciverHandler_StateDispatcherFails) {
     EXPECT_CALL(*mockMasterComm, reciveMsgMaster(testing::_))
         .WillOnce(testing::Return(RET_OK));
     EXPECT_CALL(*mockMasterStateMachine, stateDispatcher(testing::_))
         .WillOnce(testing::Return(RET_ERROR));
     EXPECT_CALL(*mockTask, vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_COMM_HANDLER)));
 
-    vMasterCommHandler(nullptr);
+    vMasterReciverHandler(nullptr);
 }
 
-// Test case when vMasterCommHandler executes successfully
-TEST_F(MasterHandlerTest, vMasterCommHandler_Success) {
+// Test case when vMasterReciverHandler executes successfully
+TEST_F(MasterHandlerTest, vMasterReciverHandler_Success) {
     EXPECT_CALL(*mockMasterComm, reciveMsgMaster(testing::_))
         .WillOnce(testing::Return(RET_OK));
     EXPECT_CALL(*mockMasterStateMachine, stateDispatcher(testing::_))
         .WillOnce(testing::Return(RET_OK));
     EXPECT_CALL(*mockTask, vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_COMM_HANDLER)));
 
-    vMasterCommHandler(nullptr);
+    vMasterReciverHandler(nullptr);
 }
 
 // ==========================
-// Unit Tests for vMasterStatusCheckHandler
+// Unit Tests for vMasterSenderHandler
 // ==========================
 // Test case when sending a message fails
-TEST_F(MasterHandlerTest, vMasterStatusCheckHandler_SendMessageFails) {
+TEST_F(MasterHandlerTest, vMasterSenderHandler_SendMessageFails) {
     EXPECT_CALL(*mockMasterStateMachine, getCurrentState(testing::_))
         .WillOnce(testing::Return(RET_OK));
     EXPECT_CALL(*mockMasterComm, sendMsgMaster(testing::_))
         .WillOnce(testing::Return(RET_ERROR));
     EXPECT_CALL(*mockTask, vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_STATUS_CHECK_HANDLER)));
 
-    vMasterStatusCheckHandler(nullptr);
+    vMasterSenderHandler(nullptr);
 }
 
-// Test case when vMasterStatusCheckHandler executes successfully
-TEST_F(MasterHandlerTest, vMasterStatusCheckHandler_Success) {
+// Test case when vMasterSenderHandler executes successfully
+TEST_F(MasterHandlerTest, vMasterSenderHandler_Success) {
     EXPECT_CALL(*mockMasterStateMachine, getCurrentState(testing::_))
         .WillOnce(testing::Return(RET_OK));
     EXPECT_CALL(*mockMasterComm, sendMsgMaster(testing::_))
         .WillOnce(testing::Return(RET_OK));
     EXPECT_CALL(*mockTask, vTaskDelay(pdMS_TO_TICKS(TASTK_TIME_MASTER_STATUS_CHECK_HANDLER)));
 
-    vMasterStatusCheckHandler(nullptr);
+    vMasterSenderHandler(nullptr);
 }
 
 // ==========================

@@ -18,12 +18,12 @@ sudo apt install -y build-essential
 
 # Step 3: Add FREERTOS_PATH to .profile
 echo "Adding FREERTOS_PATH to .profile..."
-# if ! grep -q "export FREERTOS_PATH=~/FreeRTOS" ~/.profile; then
+if ! grep -q "export FREERTOS_PATH=~/FreeRTOS" ~/.profile; then
 echo 'export FREERTOS_PATH=~/FreeRTOS' >> ~/.profile
 echo "FREERTOS_PATH added to .profile"
-# else
-#     echo "FREERTOS_PATH already exists in .profile"
-# fi
+else
+    echo "FREERTOS_PATH already exists in .profile"
+fi
 
 # Step 4: Source .profile
 echo "Sourcing .profile to apply changes..."

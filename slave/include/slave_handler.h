@@ -44,7 +44,7 @@ void setTaskHandlers(TaskHandle_t *taskHandlers);
  *
  * @param args Pointer to task arguments (can be used to pass parameters).
  */
-void vSlaveStatusObservationHandler(void *args);
+void vSlaveStatusHandler(void *args);
 
 /**
  * @brief Restart handler task function.
@@ -64,7 +64,7 @@ void vRestartHandler(void *args);
  *
  * @param args Pointer to task arguments (can be used to pass parameters).
  */
-void vTCPEchoServerTask(void *args);
+void vTCPCommHandler(void *args);
 
 #ifdef __cplusplus
 }

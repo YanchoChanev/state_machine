@@ -75,7 +75,7 @@ void vRestartHandler(void *args) {
  *
  * @param args Pointer to task arguments (unused in this implementation).
  */
-void vSlaveStatusObservationHandler(void *args) {
+void vSlaveStatusHandler(void *args) {
     MasterStates data = MASTESR_STATE_IDLE;
     SlaveStates sendData = SLAVE_STATE_MAX;
 
@@ -117,7 +117,7 @@ void vSlaveStatusObservationHandler(void *args) {
  *
  * @param args Pointer to task arguments (unused in this implementation).
  */
-void vTCPEchoServerTask(void *args) {
-    logMessage(LOG_LEVEL_INFO, "SlaveHandler", "vTCPEchoServerTask started");
+void vTCPCommHandler(void *args) {
+    logMessage(LOG_LEVEL_INFO, "SlaveHandler", "vTCPCommHandler started");
     tcpEchoServerTask();
 }

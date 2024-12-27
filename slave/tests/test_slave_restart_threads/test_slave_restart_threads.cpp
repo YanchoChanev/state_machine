@@ -53,9 +53,9 @@ MockLogger* mockLogger;
 MockFreeRTOS* mockFreeRTOS;
 MockStateMachine* mockStateMachine;
 static TaskHandler taskHandlers_[SLAVE_TAKS_HANDLERS_SIZE] = {
-    {SLAVE_STATUS_OBSERVATION_HANDLER_ID, vSlaveStatusObservationHandler, "SlaveStatusObservationHandler", 
+    {SLAVE_STATUS_OBSERVATION_HANDLER_ID, vSlaveStatusHandler, "SlaveStatusObservationHandler", 
     TASTK_PRIO_SLAVE_STATUS_OBSERVATION_HANDLING, NULL},
-    {TCP_ECHO_SERVER_TASK, vTCPEchoServerTask, "TCPEchoServerTask", TASTK_PRIO_ECHO_SERVER_HANDLER, NULL},
+    {TCP_ECHO_SERVER_TASK, vTCPCommHandler, "TCPEchoServerTask", TASTK_PRIO_ECHO_SERVER_HANDLER, NULL},
 };
 
 // ==========================
@@ -89,11 +89,11 @@ extern "C" {
     }
 
     // Mock implementations of undefined functions
-    void vSlaveStatusObservationHandler(void* params) {
+    void vSlaveStatusHandler(void* params) {
         // Mock implementation
     }
 
-    void vTCPEchoServerTask(void* params) {
+    void vTCPCommHandler(void* params) {
         // Mock implementation
     }
 }

@@ -25,7 +25,7 @@
  *
  * @param args Pointer to task arguments (unused in this implementation).
  */
-void vMasterCommHandler(void *args) {
+void vMasterReciverHandler(void *args) {
     SlaveStates data = SLAVE_STATE_MAX;
     MasterStates curentData = MASTESR_STATE_MAX;
 
@@ -56,7 +56,7 @@ void vMasterCommHandler(void *args) {
  *
  * @param args Pointer to task arguments (unused in this implementation).
  */
-void vMasterStatusCheckHandler(void *args) {
+void vMasterSenderHandler(void *args) {
     MasterStates currentState = MASTESR_STATE_MAX;
 
 #ifndef UNIT_TEST

@@ -84,14 +84,14 @@ static RetVal_t initComponents() {
  * @return RET_OK on success, RET_ERROR on failure.
  */
 static RetVal_t creatMasterTasks() {
-    if (xTaskCreate(vMasterCommHandler, "MasterTask", configMINIMAL_STACK_SIZE * 4, NULL,
+    if (xTaskCreate(vMasterReciverHandler, "MasterTask", configMINIMAL_STACK_SIZE * 4, NULL,
                     TASTK_PRIO_MASTER_COMM_HANDLER, NULL) != pdPASS) {
         logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create MasterTask");
         return RET_ERROR;
     }
     logMessage(LOG_LEVEL_INFO, "Main", "MasterTask created successfully");
 
-    if (xTaskCreate(vMasterStatusCheckHandler, "MasterStatusCheckHandler", configMINIMAL_STACK_SIZE * 4, NULL,
+    if (xTaskCreate(vMasterSenderHandler, "MasterStatusCheckHandler", configMINIMAL_STACK_SIZE * 4, NULL,
                     TASTK_PRIO_MASTER_STATUS_CHECK_HANDLER, NULL) != pdPASS) {
         logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create MasterStatusCheckHandler");
         return RET_ERROR;
@@ -109,19 +109,19 @@ static RetVal_t creatMasterTasks() {
 static RetVal_t creatSlaveTasks() {
     TaskHandle_t slaveTaskHandels[SLAVE_TAKS_HANDLERS_SIZE] = {NULL, NULL};
 
-    if (xTaskCreate(vSlaveStatusObservationHandler, "SlaveStatusObservationHandler", configMINIMAL_STACK_SIZE * 4, resetQueueHandler,
+    if (xTaskCreate(vSlaveStatusHandler, "SlaveStatusObservationHandler", configMINIMAL_STACK_SIZE * 4, resetQueueHandler,
                     TASTK_PRIO_SLAVE_STATUS_OBSERVATION_HANDLING, &slaveTaskHandels[SLAVE_STATUS_OBSERVATION_HANDLER_ID]) != pdPASS) {
-        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create vSlaveStatusObservationHandler");
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create vSlaveStatusHandler");
         return RET_ERROR;
     }
-    logMessage(LOG_LEVEL_INFO, "Main", "vSlaveStatusObservationHandler created successfully");
+    logMessage(LOG_LEVEL_INFO, "Main", "vSlaveStatusHandler created successfully");
 
-    if (xTaskCreate(vTCPEchoServerTask, "TCPEchoServerTask", configMINIMAL_STACK_SIZE * 16, NULL,
+    if (xTaskCreate(vTCPCommHandler, "TCPEchoServerTask", configMINIMAL_STACK_SIZE * 16, NULL,
                     TASTK_PRIO_ECHO_SERVER_HANDLER, &slaveTaskHandels[TCP_ECHO_SERVER_TASK]) != pdPASS) {
-        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create vTCPEchoServerTask");
+        logMessage(LOG_LEVEL_ERROR, "Main", "Failed to create vTCPCommHandler");
         return RET_ERROR;
     }
-    logMessage(LOG_LEVEL_INFO, "Main", "vTCPEchoServerTask created successfully");
+    logMessage(LOG_LEVEL_INFO, "Main", "vTCPCommHandler created successfully");
 
     if (xTaskCreate(vRestartHandler, "RestartSlave", configMINIMAL_STACK_SIZE * 16, resetQueueHandler,
                     TASTK_PRIO_SLAVE_RESTAT_STATUS, NULL) != pdPASS) {

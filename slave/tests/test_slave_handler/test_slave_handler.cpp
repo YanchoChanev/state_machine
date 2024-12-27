@@ -180,14 +180,14 @@ TEST_F(SlaveHandlerTest, SlaveStatusObservationHandler_ReceivesStateAndHandlesSt
         });
     EXPECT_CALL(*mockSlaveComm, sendMsgSlave(_)).WillOnce(Return(RET_OK));
 
-    vSlaveStatusObservationHandler(nullptr);
+    vSlaveStatusHandler(nullptr);
 }
 
 // **3. TCP Echo Server Task Tests**
 // Ensure TCP server task starts
 TEST_F(SlaveHandlerTest, TCPEchoServerTask_LogsStartAndCallsTCPServer) {
     EXPECT_CALL(*mockTCPComm, tcpEchoServerTask()).Times(1);
-    vTCPEchoServerTask(nullptr);
+    vTCPCommHandler(nullptr);
 }
 
 // ==========================
