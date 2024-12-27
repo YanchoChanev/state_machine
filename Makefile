@@ -64,6 +64,12 @@ setup:
 	@echo "Running FreeRTOS setup script..."
 	./freertos_setup.sh
 
+# Run the binary
+.PHONY: run
+run: ${BUILD_DIR}/${BIN}
+	@echo "Running ${BIN}..."
+	./${BUILD_DIR}/${BIN}
+
 # Test perform command
 .PHONY: run_master_comm_test
 run_master_comm_test:

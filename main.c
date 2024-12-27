@@ -140,6 +140,8 @@ static RetVal_t creatSlaveTasks() {
  * Initializes components, creates tasks, and starts the FreeRTOS scheduler.
  */
 int main(void) {
+    
+    printf("Slave->Master state Machine system is run...");
 
     if (initComponents() != RET_OK) {
         logMessage(LOG_LEVEL_ERROR, "Main", "Init Components failed");

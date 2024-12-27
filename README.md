@@ -8,6 +8,7 @@ This project demonstrates the integration of FreeRTOS in a POSIX-compatible envi
 - [Dependencies](#dependencies)
 - [Setup](#setup)
 - [Building the Project](#building-the-project)
+- [Running the Project](#running-the-project)
 - [Naming Convention](#naming-convention)
 - [Architecture](#architecture)
 - [System Log](#system-log)
@@ -62,6 +63,13 @@ To build the project:
 make
 ```
 The output binary will be located in the `build/` directory as `modelo-posix-gcc`.
+
+## Running the Project
+To run the project:
+```bash
+make run
+```
+This command will execute the built binary and start the application.
 
 ## Naming Convention
 - **Directories:** Use lowercase letters with underscores (e.g., `master_src`, `slave_handler`).
